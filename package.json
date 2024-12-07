@@ -1,12 +1,7 @@
 {
-	"name": "chrome-extension-boilerplate-react-vite",
-	"version": "0.1.0",
-	"description": "chrome extension boilerplate",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite.git"
-	},
+	"name": "algo-ace",
+	"version": "0.1.1",
+	"description": "an interview copilot named algo-ace : )",
 	"type": "module",
 	"scripts": {
 		"clean:bundle": "rimraf dist && rimraf dist-zip && turbo clean:bundle",
