@@ -1,0 +1,17 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+dist/
+pages/devtools/
+pages/devtools-panel/
+node_modules/
+.turbo/
+*.png
+*.svg
+*.webp
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.mp4
+package-lock.json
+pnpm-lock.yaml
+packages/

@@ -1,0 +1,198 @@
+:root {
+	--primary-color: #6366f1;
+	--hover-color: #4f46e5;
+	--bg-color: #1a1b1e;
+	--surface-color: #27282b;
+	--text-color: #e6e6e6;
+	--border-color: #3e4451;
+}
+
+.popup-container {
+	width: 360px;
+	margin: 0;
+	padding: 20px;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+		'Helvetica Neue', Arial, sans-serif;
+	background: var(--bg-color);
+	color: var(--text-color);
+	box-sizing: border-box;
+}
+
+.header {
+	margin-bottom: 24px;
+	text-align: center;
+}
+
+.title {
+	font-size: 1.5em;
+	margin: 0;
+	color: #fff;
+}
+
+.subtitle {
+	font-size: 0.9em;
+	color: #9ca3af;
+	margin: 4px 0;
+}
+
+.config-item {
+	margin: 16px 0;
+}
+
+label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: #fff;
+}
+
+input,
+select,
+textarea {
+	width: calc(100% - 24px);
+	padding: 8px 12px;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	background: var(--surface-color);
+	color: var(--text-color);
+	font-size: 14px;
+	transition: all 0.2s;
+	box-sizing: border-box;
+}
+
+.api-keys {
+	display: grid;
+	gap: 16px;
+}
+
+.api-key-item {
+	opacity: 1;
+	transition: opacity 0.3s;
+}
+
+.api-key-item.disabled {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+select {
+	width: 100%;
+	padding-right: 24px;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e6e6e6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 8px center;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.button-group {
+	display: flex;
+	gap: 12px;
+	margin-top: 24px;
+}
+
+.button {
+	flex: 1;
+	padding: 10px;
+	border: none;
+	border-radius: 6px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.button-primary {
+	background: var(--primary-color);
+	color: white;
+}
+
+.button-primary:hover {
+	background: var(--hover-color);
+}
+
+.button-secondary {
+	background: var(--surface-color);
+	color: var(--text-color);
+	border: 1px solid var(--border-color);
+}
+
+.button-secondary:hover {
+	background: #32333a;
+}
+
+.shortcut-hint {
+	margin-top: 16px;
+	padding: 12px;
+	background: var(--surface-color);
+	border-radius: 6px;
+	font-size: 13px;
+	color: #9ca3af;
+}
+
+.shortcut-item {
+	display: flex;
+	justify-content: space-between;
+	margin: 4px 0;
+}
+
+.shortcut-key {
+	background: #32333a;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-family: 'Fira Code', monospace;
+}
+
+.user-section {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	background: var(--surface-color);
+	border-radius: 8px;
+	margin-bottom: 20px;
+}
+
+.user-avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+}
+
+.user-info {
+	flex-grow: 1;
+}
+
+.user-name {
+	margin: 0;
+	font-weight: 500;
+	color: var(--text-color);
+}
+
+.user-email {
+	margin: 0;
+	font-size: 0.8em;
+	color: #9ca3af;
+}
+
+.login-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	width: 100%;
+	background: white;
+	color: #444;
+	margin-bottom: 20px;
+}
+
+.login-button img {
+	width: 18px;
+	height: 18px;
+}

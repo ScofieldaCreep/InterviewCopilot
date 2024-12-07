@@ -1,0 +1,10 @@
+{
+	"appName": {
+		"message": "面试助手",
+		"description": "扩展名称"
+	},
+	"appDescription": {
+		"message": "帮助面试者快速获取算法题解答的Chrome扩展",
+		"description": "扩展描述"
+	}
+}

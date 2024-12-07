@@ -1,0 +1,18 @@
+{
+	"extends": "@extension/tsconfig/app",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@src/*": ["src/*"]
+		},
+		"lib": ["esnext", "dom"],
+		"types": ["chrome"]
+	},
+	"include": [
+		"src",
+		"utils",
+		"vite.config.mts",
+		"../node_modules/@types",
+		"../offscreen/offscreen"
+	]
+}
