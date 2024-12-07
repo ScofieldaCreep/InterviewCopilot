@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Login</title>
+		<style>
+			body {
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 20px;
+				font-family: Arial, sans-serif;
+			}
+			.container {
+				max-width: 600px;
+				margin: 0 auto;
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				align-items: center;
+			}
+			button {
+				padding: 12px 24px;
+				background-color: #4caf50;
+				color: white;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				font-size: 16px;
+			}
+			button:hover {
+				background-color: #45a049;
+			}
+			button:disabled {
+				background-color: #cccccc;
+				cursor: not-allowed;
+			}
+			.container ul {
+				margin: 10px 0;
+			}
+			.container li {
+				margin: 8px 0;
+				color: #333;
+			}
+			.container img {
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			}
+			@keyframes fadeIn {
+				from {
+					opacity: 0;
+				}
+				to {
+					opacity: 1;
+				}
+			}
+			.container > div {
+				animation: fadeIn 0.5s ease-in-out;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<!-- 将在login.js中动态填充 -->
+		</div>
+		<script type="module" src="./src/login.js"></script>
+	</body>
+</html>

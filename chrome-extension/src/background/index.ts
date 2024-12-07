@@ -1,5 +1,5 @@
 /**
- * background.js - 扩展的后台服务脚本
+ * index.ts - 扩展的后台服务脚本 (background)
  * 作为service worker运行，可以使用大多数Chrome Extension APIs
  * 通过事件驱动的方式来执行操作
  */
@@ -23,11 +23,47 @@ const DEFAULT_PROMPT_TEMPLATE = `
 // 监听来自popup的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if (request.action === 'getAnswer' && request.tabId) {
-		querySolution({ id: request.tabId } as chrome.tabs.Tab)
+		querySolution({ id: request.tabId } as chrome.tabs.Tab).catch(error => {
+			console.error('Error querying solution:', error)
+			sendResponse({ error: error.message })
+		})
+		return true
+	}
+
+	if (request.action === 'login') {
+		// 点击popup的Login按钮时仅打开登录页面
+		chrome.windows.create(
+			{
+				url: 'login/index.html',
+				type: 'popup',
+				width: 800,
+				height: 600
+			},
+			() => {
+				sendResponse({ success: true })
+			}
+		)
+		return true // 异步sendResponse
+	}
+
+	if (request.action === 'subscribe') {
+		// 点击popup的Subscribe按钮时仅打开订阅页面
+		chrome.windows.create(
+			{
+				url: 'subscribe/index.html',
+				type: 'popup',
+				width: 800,
+				height: 600
+			},
+			() => {
+				sendResponse({ success: true })
+			}
+		)
+		return true // 异步sendResponse
 	}
 })
 
-// 监听扩展图标点击
+// 监听扩展图标点击（相当于快速获取答案）
 chrome.action.onClicked.addListener(querySolution)
 
 // 监听快捷键命令
@@ -52,15 +88,29 @@ chrome.commands.onCommand.addListener(async command => {
 })
 
 /**
- * 处理用户触发的操作（快捷键或图标点击）
+ * 处理用户触发的获取方案操作（快捷键或图标点击）
  * @param {chrome.tabs.Tab} tab - 当前标签页信息
  */
 async function querySolution(tab: chrome.tabs.Tab) {
+	const { user } = await chrome.storage.sync.get('user')
+	if (!user) {
+		throw new Error('Please login first.')
+	}
+
+	// 检查支付或试用期
+	const TRIAL_DURATION = 1 * 60 * 1000
+	const now = Date.now()
+	if (!user.hasPaid) {
+		if (!user.loginTime || now - user.loginTime > TRIAL_DURATION) {
+			throw new Error('Trial expired. Please subscribe.')
+		}
+	}
+
 	if (!tab.id) {
 		throw new Error('当前标签页ID不存在')
 	}
 	try {
-		// 1. 获取用户配置和登录状态
+		// 1. 获取用户配置
 		const config = await chrome.storage.sync.get([
 			'openaiKey',
 			'model',
@@ -68,7 +118,7 @@ async function querySolution(tab: chrome.tabs.Tab) {
 			'context'
 		])
 
-		// 4. 确保content script已注入
+		// 4. 确保content script已注入（如果未注入则尝试注入）
 		try {
 			await chrome.scripting.executeScript({
 				target: { tabId: tab.id },
@@ -96,11 +146,8 @@ async function querySolution(tab: chrome.tabs.Tab) {
 			.replace('{language}', getLanguagePrompt(config.language))
 			.replace('{context}', config.context || '')
 
-		// 7. 调用 API
+		// 7. 调用 OpenAI API
 		const apiConfig = getApiConfig(config, prompt)
-
-		// // 添加 Google 认证令牌到请求头
-		// apiConfig.headers['X-Google-Auth'] = config.googleAuthToken
 
 		const apiResponse = await fetch(apiConfig.endpoint, {
 			method: 'POST',
@@ -191,7 +238,6 @@ function generateResultHTML(answer: string) {
         color: #e6e6e6;
       }
 
-      /* 标题样式 */
       .markdown-body h1,
       .markdown-body h2,
       .markdown-body h3,
@@ -220,7 +266,6 @@ function generateResultHTML(answer: string) {
       .markdown-body h3 { font-size: 1.25em; }
       .markdown-body h4 { font-size: 1em; }
 
-      /* 代码块样式 */
       .markdown-body pre {
         margin: 16px 0;
         padding: 16px;
@@ -240,7 +285,6 @@ function generateResultHTML(answer: string) {
         background: transparent;
       }
 
-      /* 内联代码样式 */
       .markdown-body code {
         padding: 0.2em 0.4em;
         margin: 0;
@@ -251,7 +295,6 @@ function generateResultHTML(answer: string) {
         color: #e06c75;
       }
 
-      /* 列表样式 */
       .markdown-body ul,
       .markdown-body ol {
         padding-left: 2em;
@@ -264,7 +307,6 @@ function generateResultHTML(answer: string) {
         margin: 0.25em 0;
       }
 
-      /* 引用块样式 */
       .markdown-body blockquote {
         padding: 0 1em;
         margin: 16px 0;
@@ -273,7 +315,6 @@ function generateResultHTML(answer: string) {
         background: #282c34;
       }
 
-      /* 表格样式 */
       .markdown-body table {
         display: block;
         width: 100%;
@@ -298,7 +339,6 @@ function generateResultHTML(answer: string) {
         background-color: #282c34;
       }
 
-      /* 分割线样式 */
       .markdown-body hr {
         height: 0.25em;
         padding: 0;
@@ -307,7 +347,6 @@ function generateResultHTML(answer: string) {
         border: 0;
       }
 
-      /* 链接样式 */
       .markdown-body a {
         color: #61afef;
         text-decoration: none;
@@ -318,14 +357,12 @@ function generateResultHTML(answer: string) {
         color: #528bbc;
       }
 
-      /* 段落样式 */
       .markdown-body p {
         margin-top: 0;
         margin-bottom: 16px;
         color: #e6e6e6;
       }
 
-      /* 强调样式 */
       .markdown-body strong {
         color: #ffffff;
       }
@@ -334,7 +371,6 @@ function generateResultHTML(answer: string) {
         color: #e6e6e6;
       }
 
-      /* 代码高亮主题自定义 */
       .hljs {
         background: #282c34;
         color: #abb2bf;
@@ -376,22 +412,20 @@ function generateResultHTML(answer: string) {
 }
 
 /**
- * 创建新标签页显示结果
- * @param {string} answer - GPT的回答内容
+ * 创建新窗口展示答案
+ * @param {string} answer
  */
 async function createAnswerTab(answer: string) {
 	try {
-		// 创建新窗口
 		await chrome.windows.create({
 			url: `data:text/html,${encodeURIComponent(generateResultHTML(answer))}`,
-			type: 'popup', // 使用popup类型，更适合阅读
-			width: 1000, // 设置合适的窗口大小
+			type: 'popup',
+			width: 1000,
 			height: 800,
-			focused: true // 自动聚焦到新窗口
+			focused: true
 		})
 	} catch (error) {
 		console.error('Failed to create window:', error)
-		// 如果创建窗口失败，回退到创建标签页，自动激活新标签页
 		await chrome.tabs.create({
 			url: `data:text/html,${encodeURIComponent(generateResultHTML(answer))}`,
 			active: true
@@ -401,12 +435,12 @@ async function createAnswerTab(answer: string) {
 
 // 添加语言提示词函数
 function getLanguagePrompt(lang: string) {
-	const prompts = {
+	const prompts: { [key: string]: string } = {
 		en: 'English',
 		zh: '中文',
 		ja: '日本語',
 		es: 'Español',
 		hi: 'हिन्दी'
 	}
-	return prompts[lang as keyof typeof prompts] || 'English'
+	return prompts[lang] || 'English'
 }
