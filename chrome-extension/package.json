@@ -1,7 +1,7 @@
 {
 	"name": "chrome-extension",
-	"version": "0.3.4",
-	"description": "chrome extension - core settings",
+	"version": "0.1.0",
+	"description": "background, signin and subscription",
 	"type": "module",
 	"scripts": {
 		"clean:node_modules": "pnpx rimraf node_modules",

@@ -146,9 +146,9 @@ const UserDashboard: React.FC<{
 					value={model}
 					onChange={e => setModel(e.target.value)}
 					options={[
-						{ value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-						{ value: 'o1-mini', label: 'O1 Mini' },
-						{ value: 'gpt-4o', label: 'GPT-4 O' }
+						{ value: 'gpt-3.5-turbo', label: 'Swift' },
+						{ value: 'gpt-4o', label: 'Accurate' },
+						{ value: 'o1-mini', label: 'Monster' }
 					]}
 				/>
 			</ConfigItem>
@@ -172,7 +172,7 @@ const UserDashboard: React.FC<{
 				<textarea
 					id='context'
 					rows={3}
-					placeholder='为 AI 添加自定义指令...'
+					placeholder='Add custom instructions to the AI...'
 					value={context}
 					onChange={e => setContext(e.target.value)}
 				/>
