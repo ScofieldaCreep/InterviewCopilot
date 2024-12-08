@@ -7,8 +7,8 @@ import { isDev, isProduction, watchOption } from '@extension/vite-config'
 import checker from 'vite-plugin-checker'
 
 const rootDir = resolve(__dirname)
-const srcDir = resolve(rootDir, 'src') // meaning: chrome-extension/src
-const outDir = resolve(rootDir, '..', 'dist') // meaning: chrome-extension/../dist
+const srcDir = resolve(rootDir, 'src')
+const outDir = resolve(rootDir, '..', 'dist')
 
 export default defineConfig({
 	resolve: {
@@ -44,7 +44,7 @@ export default defineConfig({
 		reportCompressedSize: isProduction,
 		watch: watchOption,
 		rollupOptions: {
-			external: ['chrome']
+			external: ['chrome'] // 让 Chrome API 不被打包
 		}
 	},
 	envDir: '../'

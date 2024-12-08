@@ -1,209 +1,137 @@
-/**
- * index.ts - 扩展的后台服务脚本 (background)
- * 作为service worker运行，可以使用大多数Chrome Extension APIs
- * 通过事件驱动的方式来执行操作
- */
+// index.ts - 后台逻辑
+import { db, functions } from './firebase-init.js'
+import { httpsCallable } from 'firebase/functions'
+import {
+	collection,
+	getDocs,
+	query,
+	where,
+	orderBy,
+	limit
+} from 'firebase/firestore'
 
-// 默认的提示词模板
-const DEFAULT_PROMPT_TEMPLATE = `
-请分析以下算法题目，并给出详细解答：
-{content}
+// 获取用户配置
+async function getApiConfig() {
+	const { model, language, context } = await chrome.storage.sync.get([
+		'model',
+		'language',
+		'context'
+	])
+	return { model, language, context }
+}
 
-要求：
-1. 使用{language},使用markdown格式回答
-2. 使用Python3语言,并保持Python3的代码风格
-3. 分析题目关键点和考察要点
-4. 给出最优解法的思路和推导过程
-5. 提供完整的代码实现（包含必要的注释）
-6. 分析时间和空间复杂度
-7. 补充其他解法（如果有）
-{context}
-`.trim()
+// 调用后端函数获取回答
+async function callOpenAIThroughBackend(prompt: string, model: string) {
+	const getOpenAIAnswer = httpsCallable(functions, 'getAIResponse')
+	const response = await getOpenAIAnswer({ prompt, model })
+	return response.data.answer
+}
 
-// 监听来自popup的消息
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-	if (request.action === 'getAnswer' && request.tabId) {
-		querySolution({ id: request.tabId } as chrome.tabs.Tab).catch(error => {
-			console.error('Error querying solution:', error)
-			sendResponse({ error: error.message })
-		})
-		return true
-	}
+// 获取用户数据
+async function getUser() {
+	const { user } = await chrome.storage.sync.get('user')
+	return user || null
+}
 
-	if (request.action === 'login') {
-		// 点击popup的Login按钮时仅打开登录页面
-		chrome.windows.create(
-			{
-				url: 'login/index.html',
-				type: 'popup',
-				width: 800,
-				height: 600
-			},
-			() => {
-				sendResponse({ success: true })
-			}
-		)
-		return true // 异步sendResponse
-	}
+// 检查订阅状态
+async function checkPaymentStatus(userId: string): Promise<boolean> {
+	const paymentsRef = collection(db, 'customers', userId, 'subscriptions')
+	const q = query(
+		paymentsRef,
+		where('status', '==', 'active'),
+		orderBy('current_period_end', 'desc'),
+		limit(1)
+	)
+	const snapshot = await getDocs(q)
+	if (snapshot.empty) return false
+	const data = snapshot.docs[0].data()
+	const currentPeriodEndMs = data.current_period_end.toMillis()
+	return currentPeriodEndMs > Date.now()
+}
 
-	if (request.action === 'subscribe') {
-		// 点击popup的Subscribe按钮时仅打开订阅页面
-		chrome.windows.create(
-			{
-				url: 'subscribe/index.html',
-				type: 'popup',
-				width: 800,
-				height: 600
-			},
-			() => {
-				sendResponse({ success: true })
-			}
-		)
-		return true // 异步sendResponse
-	}
-})
-
-// 监听扩展图标点击（相当于快速获取答案）
-chrome.action.onClicked.addListener(querySolution)
-
-// 监听快捷键命令
-chrome.commands.onCommand.addListener(async command => {
-	console.log('Command triggered:', command)
-
-	const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-	if (!tab) {
-		console.error('No active tab found')
+// 刷新用户数据
+async function refreshUserData() {
+	const user = await getUser()
+	if (!user || !user.uid) {
+		console.error('No user found in storage, cannot refresh user data.')
 		return
 	}
 
-	if (command === '_execute_action') {
-		// 打开配置页面
-		console.log('Use Alt+Shift+Y to open popup')
-		await chrome.action.openPopup()
-	} else if (command === 'get_answer') {
-		// 直接获取题解
-		console.log('Use Alt+Q to get answer')
-		await querySolution(tab)
-	}
-})
-
-/**
- * 处理用户触发的获取方案操作（快捷键或图标点击）
- * @param {chrome.tabs.Tab} tab - 当前标签页信息
- */
-async function querySolution(tab: chrome.tabs.Tab) {
-	const { user } = await chrome.storage.sync.get('user')
-	if (!user) {
-		throw new Error('Please login first.')
+	const hasValidSubscription = await checkPaymentStatus(user.uid)
+	const updatedUser = {
+		...user,
+		hasValidSubscription
 	}
 
-	// 检查支付或试用期
-	const TRIAL_DURATION = 1 * 60 * 1000
+	await new Promise<void>(resolve => {
+		chrome.storage.sync.set({ user: updatedUser }, resolve)
+	})
+	console.log('User data refreshed:', updatedUser)
+}
+
+async function isUserSubscriptionValid(user) {
+	if (!user) return false
+	if (user.hasValidSubscription) return true
+
+	// 试用期30分钟
+	const TRIAL_DURATION = 30 * 60 * 1000
 	const now = Date.now()
-	if (!user.hasPaid) {
-		if (!user.loginTime || now - user.loginTime > TRIAL_DURATION) {
-			throw new Error('Trial expired. Please subscribe.')
-		}
-	}
+	return user.loginTime && now - user.loginTime < TRIAL_DURATION
+}
 
-	if (!tab.id) {
-		throw new Error('当前标签页ID不存在')
-	}
+async function injectContentScript(tabId: number) {
 	try {
-		// 1. 获取用户配置
-		const config = await chrome.storage.sync.get([
-			'openaiKey',
-			'model',
-			'language',
-			'context'
-		])
-
-		// 4. 确保content script已注入（如果未注入则尝试注入）
-		try {
-			await chrome.scripting.executeScript({
-				target: { tabId: tab.id },
-				files: ['content/index.js']
-			})
-		} catch (error) {
-			console.log('Content script already injected or failed:', error)
-		}
-
-		// 5. 获取页面内容
-		const response = await chrome.tabs
-			.sendMessage(tab.id, {
-				action: 'getPageContent'
-			})
-			.catch(error => {
-				throw new Error(`无法与页面 ${tab.id} 通信，请刷新页面重试`)
-			})
-
-		if (!response?.success) {
-			throw new Error(response?.error || '获取页面内容失败')
-		}
-
-		// 6. 构建提示词
-		const prompt = DEFAULT_PROMPT_TEMPLATE.replace('{content}', response.body)
-			.replace('{language}', getLanguagePrompt(config.language))
-			.replace('{context}', config.context || '')
-
-		// 7. 调用 OpenAI API
-		const apiConfig = getApiConfig(config, prompt)
-
-		const apiResponse = await fetch(apiConfig.endpoint, {
-			method: 'POST',
-			headers: apiConfig.headers as HeadersInit,
-			body: JSON.stringify(apiConfig.body)
+		await chrome.scripting.executeScript({
+			target: { tabId },
+			files: ['content/index.js']
 		})
-
-		if (!apiResponse.ok) {
-			const error = await apiResponse.json()
-			throw new Error(error.error?.message || 'API 调用失败')
-		}
-
-		// 8. 处理响应
-		const result = await apiResponse.json()
-		const answer = result.choices[0].message.content
-
-		// 9. 显示结果
-		await createAnswerTab(answer)
 	} catch (error) {
-		console.error('Background script error:', error)
-		chrome.notifications.create({
-			type: 'basic',
-			iconUrl:
-				'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-			title: '错误',
-			message: (error as Error).message || '发生未知错误'
+		console.log(
+			'Content script injection error (maybe already injected):',
+			error
+		)
+	}
+}
+
+async function fetchPageContent(tabId: number) {
+	const response = await chrome.tabs.sendMessage(tabId, {
+		action: 'getPageContent'
+	})
+	if (!response?.success) {
+		throw new Error(response?.error || 'Failed to get page content')
+	}
+	return response.body
+}
+
+function getLanguagePrompt(lang: string) {
+	const prompts: { [key: string]: string } = {
+		en: 'English',
+		zh: '中文',
+		ja: '日本語',
+		es: 'Español',
+		hi: 'हिन्दी'
+	}
+	return prompts[lang] || 'English'
+}
+
+async function showAnswer(answer: string) {
+	const html = generateResultHTML(answer)
+	try {
+		await chrome.windows.create({
+			url: `data:text/html,${encodeURIComponent(html)}`,
+			type: 'popup',
+			width: 1000,
+			height: 800,
+			focused: true
+		})
+	} catch {
+		await chrome.tabs.create({
+			url: `data:text/html,${encodeURIComponent(html)}`,
+			active: true
 		})
 	}
 }
 
-// 获取API配置
-function getApiConfig(config: { [key: string]: any }, prompt: string) {
-	console.log('API配置:', config)
-	return {
-		endpoint: 'https://api.openai.com/v1/chat/completions',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${config.openaiKey}`
-		},
-		body: {
-			model: config.model || 'gpt-3.5-turbo',
-			messages: [
-				{
-					role: 'user',
-					content: prompt
-				}
-			]
-		}
-	}
-}
-
-/**
- * 生成结果页面的HTML
- * @param {string} answer - GPT的回答内容
- * @returns {string} HTML字符串
- */
 function generateResultHTML(answer: string) {
 	return `
 <!DOCTYPE html>
@@ -411,36 +339,97 @@ function generateResultHTML(answer: string) {
 </html>`.trim()
 }
 
-/**
- * 创建新窗口展示答案
- * @param {string} answer
- */
-async function createAnswerTab(answer: string) {
-	try {
-		await chrome.windows.create({
-			url: `data:text/html,${encodeURIComponent(generateResultHTML(answer))}`,
-			type: 'popup',
-			width: 1000,
-			height: 800,
-			focused: true
-		})
-	} catch (error) {
-		console.error('Failed to create window:', error)
-		await chrome.tabs.create({
-			url: `data:text/html,${encodeURIComponent(generateResultHTML(answer))}`,
-			active: true
-		})
-	}
+async function querySolution(tabOrId) {
+	const tabId = typeof tabOrId === 'number' ? tabOrId : tabOrId.id
+	const user = await getUser()
+	const validSubscription = await isUserSubscriptionValid(user)
+	if (!user) throw new Error('Please login first.')
+	if (!validSubscription) throw new Error('Trial expired. Please subscribe.')
+
+	const { model, language, context } = await getApiConfig()
+
+	await injectContentScript(tabId)
+	const pageContent = await fetchPageContent(tabId)
+
+	const DEFAULT_PROMPT_TEMPLATE = `
+    请分析以下算法题目，并给出详细解答：
+    {content}
+  
+    要求：
+    1. 使用{language}, 使用markdown格式回答
+    2. 使用Python3语言, 并保持Python3的代码风格
+    3. 分析题目关键点和考察要点
+    4. 给出最优解法的思路和推导过程
+    5. 提供完整的代码实现（包含必要的注释）
+    6. 分析时间和空间复杂度
+    7. 补充其他解法（如果有）
+    {context}
+  `.trim()
+
+	const prompt = DEFAULT_PROMPT_TEMPLATE.replace('{content}', pageContent)
+		.replace('{language}', getLanguagePrompt(language))
+		.replace('{context}', context || '')
+
+	const answer = await callOpenAIThroughBackend(prompt, model)
+	await showAnswer(answer)
 }
 
-// 添加语言提示词函数
-function getLanguagePrompt(lang: string) {
-	const prompts: { [key: string]: string } = {
-		en: 'English',
-		zh: '中文',
-		ja: '日本語',
-		es: 'Español',
-		hi: 'हिन्दी'
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+	if (request.action === 'getAnswer' && request.tabId) {
+		querySolution(request.tabId)
+			.then(() => sendResponse({ success: true }))
+			.catch(error => {
+				console.error(error)
+				sendResponse({ error: error.message })
+			})
+		return true
 	}
-	return prompts[lang] || 'English'
-}
+
+	if (request.action === 'login') {
+		chrome.windows.create(
+			{
+				url: 'login/index.html',
+				type: 'popup',
+				width: 800,
+				height: 600
+			},
+			() => sendResponse({ success: true })
+		)
+		return true
+	}
+
+	if (request.action === 'subscribe') {
+		chrome.windows.create(
+			{
+				url: 'subscribe/index.html',
+				type: 'popup',
+				width: 800,
+				height: 600
+			},
+			() => sendResponse({ success: true })
+		)
+		return true
+	}
+
+	if (request.action === 'refreshUser') {
+		refreshUserData()
+			.then(() => sendResponse({ success: true }))
+			.catch(err => {
+				console.error('Failed to refresh user data:', err)
+				sendResponse({ success: false, error: err.message })
+			})
+		return true
+	}
+})
+
+chrome.action.onClicked.addListener(querySolution)
+
+chrome.commands.onCommand.addListener(async command => {
+	const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+	if (!tab) return
+	if (command === '_execute_action') {
+		await chrome.action.openPopup()
+	} else if (command === 'get_answer') {
+		await querySolution(tab)
+	}
+})

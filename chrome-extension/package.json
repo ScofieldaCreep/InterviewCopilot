@@ -19,7 +19,7 @@
 		"@extension/shared": "workspace:*",
 		"@extension/storage": "workspace:*",
 		"webextension-polyfill": "^0.12.0",
-		"firebase": "^10.7.1"
+		"firebase": "^11.0.2"
 	},
 	"devDependencies": {
 		"@extension/dev-utils": "workspace:*",

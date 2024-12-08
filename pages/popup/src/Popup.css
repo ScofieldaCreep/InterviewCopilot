@@ -1,4 +1,3 @@
-/* 全局变量和通用样式 */
 :root {
 	--primary-color: #6366f1;
 	--primary-hover-color: #4f46e5;
@@ -22,14 +21,11 @@ body {
 	color: var(--text-color);
 }
 
-/* 容器样式 */
 .popup-container {
 	width: 360px;
-	height: 600px;
 	padding: 20px;
 }
 
-/* 标题和副标题 */
 .header {
 	text-align: center;
 	margin-bottom: 24px;
@@ -46,7 +42,6 @@ body {
 	margin-top: 4px;
 }
 
-/* 用户信息样式 - 更新 */
 .user-card {
 	display: flex;
 	align-items: center;
@@ -85,7 +80,6 @@ body {
 	font-size: 0.85em;
 }
 
-/* 配置项样式 - 更新 */
 .config-item {
 	background-color: var(--surface-color);
 	padding: 16px;
@@ -123,7 +117,6 @@ body {
 	box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
-/* 下拉选择框的样式 */
 select {
 	appearance: none;
 	background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%200l5%206%205-6z%22%20fill%3D%22%23e6e6e6%22/%3E%3C/svg%3E');
@@ -133,7 +126,6 @@ select {
 	padding-right: 32px;
 }
 
-/* 按钮样式 */
 .button {
 	display: inline-flex;
 	align-items: center;
@@ -165,14 +157,12 @@ select {
 	background-color: #32333a;
 }
 
-/* 按钮组样式 */
 .button-group {
 	display: flex;
 	gap: 12px;
 	margin-top: 24px;
 }
 
-/* 快捷提示样式 */
 .shortcut-hint {
 	margin-top: 16px;
 	padding: 12px;
@@ -195,7 +185,6 @@ select {
 	font-family: 'Fira Code', monospace;
 }
 
-/* 登录部分样式 */
 .login-section {
 	text-align: center;
 }
@@ -205,7 +194,6 @@ select {
 	color: var(--text-color);
 }
 
-/* 试用期和订阅部分样式 */
 .trial-section,
 .expired-section {
 	text-align: center;
@@ -222,27 +210,3 @@ select {
 	width: 100%;
 	margin-top: 16px;
 }
-
-/* 调整按钮组样式 */
-.trial-section .button,
-.expired-section .button {
-	width: 100%;
-	margin-bottom: 12px;
-}
-
-/* 响应式布局 
-@media (max-width: 400px) {
-	.user-card {
-		flex-direction: column;
-		align-items: center;
-	}
-	.user-avatar {
-		margin-right: 0;
-		margin-bottom: 12px;
-	}
-	.logout-button {
-		margin-left: 0;
-		margin-top: 12px;
-	}
-}
-*/

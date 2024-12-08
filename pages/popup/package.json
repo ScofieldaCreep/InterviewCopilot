@@ -21,7 +21,7 @@
 	"dependencies": {
 		"@extension/shared": "workspace:*",
 		"@extension/storage": "workspace:*",
-		"firebase": "^10.7.1"
+		"firebase": "^11.0.2"
 	},
 	"devDependencies": {
 		"@extension/tailwindcss-config": "workspace:*",
