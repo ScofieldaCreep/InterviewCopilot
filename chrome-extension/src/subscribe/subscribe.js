@@ -10,7 +10,7 @@ import {
 	orderBy,
 	limit
 } from 'firebase/firestore'
-import { db } from './firebase-init.js'
+import { db } from '../firebase-init.js'
 
 async function getUserFromStorage() {
 	return new Promise(resolve => {
@@ -83,6 +83,7 @@ function renderPaymentInstructions(container, data, onCancel, onProceed) {
 	  <h2>Payment Instructions</h2>
 	  <p>You will be redirected to the payment page.</p>
 	  <p>After completing the payment, please close this window and reopen the extension popup to see updated status.</p>
+	  <p>If the status does not update automatically, please log out and log back in manually.</p>
 	  <div style="display: flex; gap: 10px; margin-top: 20px;">
 		<button id="cancelButton" style="background-color: #dc3545;">Cancel</button>
 		<button id="proceedButton" style="background-color: #28a745;">Proceed to Payment</button>
@@ -116,7 +117,7 @@ function renderRetry(container, message, onRetry) {
 /** ================== Main Logic (Event Listeners & Initialization) ================== **/
 document.addEventListener('DOMContentLoaded', async () => {
 	const container = document.querySelector('.container')
-	const PRICE_ID = 'price_1QTHqwDzYvxUqt5aWYmd8loM'
+	const PRICE_ID = 'price_1QTjS2DzYvxUqt5ag47kVNwF' // not test mode !
 
 	const user = await getUserFromStorage()
 	if (!user || !user.email) {

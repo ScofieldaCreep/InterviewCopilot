@@ -31,12 +31,6 @@ export default defineConfig({
 	],
 	publicDir: resolve(rootDir, 'public'),
 	build: {
-		lib: {
-			formats: ['iife'],
-			entry: resolve(srcDir, 'background/index.ts'),
-			name: 'BackgroundScript',
-			fileName: 'background'
-		},
 		outDir,
 		emptyOutDir: false,
 		sourcemap: isDev,
@@ -44,7 +38,16 @@ export default defineConfig({
 		reportCompressedSize: isProduction,
 		watch: watchOption,
 		rollupOptions: {
-			external: ['chrome'] // 让 Chrome API 不被打包
+			input: {
+				background: resolve(srcDir, 'background/index.ts'),
+				login: resolve(srcDir, 'login/login.html'),
+				subscribe: resolve(srcDir, 'subscribe/subscribe.html')
+			},
+			output: {
+				format: 'esm', // 使用ESM格式
+				entryFileNames: '[name].js' // 输出 background.js, login.js, subscribe.js
+			},
+			external: ['chrome']
 		}
 	},
 	envDir: '../'

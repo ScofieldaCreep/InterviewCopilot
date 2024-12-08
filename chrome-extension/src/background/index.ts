@@ -1,5 +1,5 @@
 // index.ts - 后台逻辑
-import { db, functions } from './firebase-init.js'
+import { db, functions } from '../firebase-init.js'
 import { httpsCallable } from 'firebase/functions'
 import {
 	collection,
@@ -10,7 +10,6 @@ import {
 	limit
 } from 'firebase/firestore'
 
-// 获取用户配置
 async function getApiConfig() {
 	const { model, language, context } = await chrome.storage.sync.get([
 		'model',
@@ -20,20 +19,17 @@ async function getApiConfig() {
 	return { model, language, context }
 }
 
-// 调用后端函数获取回答
 async function callOpenAIThroughBackend(prompt: string, model: string) {
 	const getOpenAIAnswer = httpsCallable(functions, 'getAIResponse')
 	const response = await getOpenAIAnswer({ prompt, model })
 	return response.data.answer
 }
 
-// 获取用户数据
 async function getUser() {
 	const { user } = await chrome.storage.sync.get('user')
 	return user || null
 }
 
-// 检查订阅状态
 async function checkPaymentStatus(userId: string): Promise<boolean> {
 	const paymentsRef = collection(db, 'customers', userId, 'subscriptions')
 	const q = query(
@@ -49,7 +45,6 @@ async function checkPaymentStatus(userId: string): Promise<boolean> {
 	return currentPeriodEndMs > Date.now()
 }
 
-// 刷新用户数据
 async function refreshUserData() {
 	const user = await getUser()
 	if (!user || !user.uid) {
@@ -76,7 +71,13 @@ async function isUserSubscriptionValid(user) {
 	// 试用期30分钟
 	const TRIAL_DURATION = 30 * 60 * 1000
 	const now = Date.now()
-	return user.loginTime && now - user.loginTime < TRIAL_DURATION
+
+	// 用 creationTime 来判断试用期
+	if (!user.creationTime) {
+		return false
+	}
+
+	return now - user.creationTime < TRIAL_DURATION
 }
 
 async function injectContentScript(tabId: number) {
@@ -138,7 +139,7 @@ function generateResultHTML(answer: string) {
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>算法题解答</title>
+    <title>AlgoAce Solution</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.2.12/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
@@ -388,7 +389,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if (request.action === 'login') {
 		chrome.windows.create(
 			{
-				url: 'login/index.html',
+				url: 'login.html',
 				type: 'popup',
 				width: 800,
 				height: 600
@@ -401,7 +402,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if (request.action === 'subscribe') {
 		chrome.windows.create(
 			{
-				url: 'subscribe/index.html',
+				url: 'subscribe.html',
 				type: 'popup',
 				width: 800,
 				height: 600

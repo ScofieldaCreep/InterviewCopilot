@@ -1,6 +1,8 @@
+// firebase-init.js
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth/web-extension'
+import { getFunctions } from 'firebase/functions'
 import { getFirestore } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
 
 const firebaseConfig = {
 	apiKey: 'AIzaSyDnY6QfGkomnyKr6tw3qTsfza1Pr3x2vbk',
@@ -13,11 +15,8 @@ const firebaseConfig = {
 }
 
 const app = initializeApp(firebaseConfig)
-const auth = getAuth(app)
+const functions = getFunctions(app, 'us-central1')
 const db = getFirestore(app)
+const auth = getAuth(app)
 
-// Configure for extension use
-auth._getFramework = () => 'extension'
-db._getFramework = () => 'extension'
-
-export { auth, db }
+export { db, auth, functions }

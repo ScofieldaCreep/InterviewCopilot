@@ -6,11 +6,7 @@ interface User {
 	email: string
 	photo?: string
 	hasValidSubscription: boolean
-	loginTime: number
-}
-
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-	variant?: 'primary' | 'secondary'
+	creationTime: number
 }
 
 interface Option {
@@ -18,22 +14,16 @@ interface Option {
 	label: string
 }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-	options: Option[]
-}
-
 /** ================== 基础UI组件 ================== **/
 
-const Button: React.FC<ButtonProps> = ({
-	variant = 'primary',
-	children,
-	className = '',
-	...props
-}) => {
+const Button: React.FC<
+	React.ButtonHTMLAttributes<HTMLButtonElement> & {
+		variant?: 'primary' | 'secondary'
+	}
+> = ({ variant = 'primary', children, className = '', ...props }) => {
 	const baseClass = 'button'
 	const variantClass =
 		variant === 'primary' ? 'button-primary' : 'button-secondary'
-
 	return (
 		<button className={`${baseClass} ${variantClass} ${className}`} {...props}>
 			{children}
@@ -41,231 +31,82 @@ const Button: React.FC<ButtonProps> = ({
 	)
 }
 
-const Select: React.FC<SelectProps> = ({ options, ...props }) => {
-	return (
-		<select {...props}>
-			{options.map(option => (
-				<option key={option.value} value={option.value}>
-					{option.label}
-				</option>
-			))}
-		</select>
-	)
-}
+const Select: React.FC<
+	React.SelectHTMLAttributes<HTMLSelectElement> & { options: Option[] }
+> = ({ options, ...props }) => (
+	<select {...props}>
+		{options.map(option => (
+			<option key={option.value} value={option.value}>
+				{option.label}
+			</option>
+		))}
+	</select>
+)
 
-const ConfigItem: React.FC<{ label: string; children: React.ReactNode }> = ({
-	label,
-	children
-}) => {
-	return (
-		<div className='config-item'>
-			<label>{label}</label>
-			{children}
-		</div>
-	)
-}
+const ConfigItem: React.FC<{ label: string }> = ({ label, children }) => (
+	<div className='config-item'>
+		<label>{label}</label>
+		{children}
+	</div>
+)
 
 const UserInfo: React.FC<{ user: User; onLogout: () => void }> = ({
 	user,
 	onLogout
-}) => {
-	return (
-		<div className='user-card compact'>
-			<img
-				src={user.photo || 'default-avatar.png'}
-				alt={user.name}
-				className='user-avatar small'
-			/>
-			<div className='user-details'>
-				<h2 className='user-name'>{user.name}</h2>
-				<p className='user-email'>{user.email}</p>
-			</div>
-			<Button
-				variant='secondary'
-				onClick={onLogout}
-				className='logout-button compact'
-			>
-				Logout
-			</Button>
+}) => (
+	<div className='user-card compact'>
+		<img
+			src={user.photo || 'default-avatar.png'}
+			alt={user.name}
+			className='user-avatar small'
+		/>
+		<div className='user-details'>
+			<h2 className='user-name'>{user.name}</h2>
+			<p className='user-email'>{user.email}</p>
 		</div>
-	)
-}
+		<Button
+			variant='secondary'
+			onClick={onLogout}
+			className='logout-button compact'
+		>
+			Logout
+		</Button>
+	</div>
+)
 
-const ShortcutHint: React.FC = () => {
-	return (
-		<div className='shortcut-hint'>
-			<div className='shortcut-item'>
-				<span>Open Settings:</span>
-				<span className='shortcut-key'>Alt + Shift + Y</span>
-			</div>
-			<div className='shortcut-item'>
-				<span>Quick Solution:</span>
-				<span className='shortcut-key'>Alt + Q</span>
-			</div>
+const ShortcutHint: React.FC = () => (
+	<div className='shortcut-hint'>
+		<div className='shortcut-item'>
+			<span>Open Settings:</span>
+			<span className='shortcut-key'>Alt + Shift + Y</span>
 		</div>
-	)
-}
-
-const TrialSection: React.FC<{
-	timeLeft: string
-	onGetSolution: () => void
-	onSubscribe: () => void
-	onLogout: () => void
-}> = ({ timeLeft, onGetSolution, onSubscribe, onLogout }) => {
-	return (
-		<div className='trial-section'>
-			<p>您的免费试用正在进行。剩余时间：{timeLeft}</p>
-			<Button
-				variant='secondary'
-				onClick={onGetSolution}
-				className='full-width-button'
-			>
-				Get Solution
-			</Button>
-			<Button
-				variant='primary'
-				onClick={onSubscribe}
-				className='full-width-button'
-			>
-				立即订阅
-			</Button>
-			<Button
-				variant='secondary'
-				onClick={onLogout}
-				className='full-width-button'
-			>
-				Logout
-			</Button>
+		<div className='shortcut-item'>
+			<span>Quick Solution:</span>
+			<span className='shortcut-key'>Alt + Q</span>
 		</div>
-	)
-}
+	</div>
+)
 
-const ExpiredSection: React.FC<{
-	onSubscribe: () => void
-	onLogout: () => void
-}> = ({ onSubscribe, onLogout }) => {
-	return (
-		<div className='expired-section'>
-			<p>您的免费试用已结束。请订阅以继续使用解答功能。</p>
-			<Button
-				variant='primary'
-				onClick={onSubscribe}
-				className='full-width-button'
-			>
-				立即订阅
-			</Button>
-			<Button
-				variant='secondary'
-				onClick={onLogout}
-				className='full-width-button'
-			>
-				Logout
-			</Button>
-		</div>
-	)
-}
+const Header: React.FC = () => (
+	<header className='header'>
+		<h1 className='title'>Interview Copilot</h1>
+		<p className='subtitle'>AI-powered algorithm solution assistant</p>
+	</header>
+)
 
-/** ================== 高层组件 ================== **/
+const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => (
+	<div className='login-section'>
+		<p style={{ marginBottom: '10px' }}>
+			Login with Google to enjoy a 30-minute unlimited AI solution trial!
+		</p>
+		<Button variant='primary' onClick={onLogin}>
+			Login with Google
+		</Button>
+	</div>
+)
 
-const Header: React.FC = () => {
-	return (
-		<header className='header'>
-			<h1 className='title'>Interview Copilot</h1>
-			<p className='subtitle'>AI-powered algorithm solution assistant</p>
-		</header>
-	)
-}
-
-const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
-	return (
-		<div className='login-section'>
-			<p style={{ marginBottom: '10px' }}>
-				使用 Google 登录，享受30分钟不限次数的AI解答免费试用！
-			</p>
-			<Button variant='primary' onClick={onLogin}>
-				使用 Google 登录
-			</Button>
-		</div>
-	)
-}
-
-const PaidSection: React.FC<{
-	user: User
-	onLogout: () => void
-	model: string
-	setModel: React.Dispatch<React.SetStateAction<string>>
-	language: string
-	setLanguage: React.Dispatch<React.SetStateAction<string>>
-	context: string
-	setContext: React.Dispatch<React.SetStateAction<string>>
-	onGetSolution: () => void
-}> = ({
-	user,
-	onLogout,
-	model,
-	setModel,
-	language,
-	setLanguage,
-	context,
-	setContext,
-	onGetSolution
-}) => {
-	return (
-		<>
-			<UserInfo user={user} onLogout={onLogout} />
-
-			<ConfigItem label='Model'>
-				<Select
-					id='model'
-					value={model}
-					onChange={e => setModel(e.target.value)}
-					options={[
-						{ value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-						{ value: 'o1-mini', label: 'O1 Mini' },
-						{ value: 'gpt-4o', label: 'GPT-4 O' }
-					]}
-				/>
-			</ConfigItem>
-
-			<ConfigItem label='Response Language'>
-				<Select
-					id='language'
-					value={language}
-					onChange={e => setLanguage(e.target.value)}
-					options={[
-						{ value: 'en', label: 'English' },
-						{ value: 'zh', label: 'Chinese (中文)' },
-						{ value: 'ja', label: 'Japanese (日本語)' },
-						{ value: 'es', label: 'Spanish (Español)' },
-						{ value: 'hi', label: 'Hindi (हिन्दी)' }
-					]}
-				/>
-			</ConfigItem>
-
-			<ConfigItem label='Custom Prompt (Optional)'>
-				<textarea
-					id='context'
-					rows={3}
-					placeholder='为 AI 添加自定义指令...'
-					value={context}
-					onChange={e => setContext(e.target.value)}
-				/>
-			</ConfigItem>
-
-			<Button
-				variant='secondary'
-				onClick={onGetSolution}
-				className='full-width-button'
-			>
-				Get Solution
-			</Button>
-
-			<ShortcutHint />
-		</>
-	)
-}
-
-const UnpaidSection: React.FC<{
+/** ================== 合并后的统一用户面板组件 ================== **/
+const UserDashboard: React.FC<{
 	user: User
 	onLogout: () => void
 	model: string
@@ -290,11 +131,9 @@ const UnpaidSection: React.FC<{
 	onGetSolution,
 	onSubscribe
 }) => {
-	const inTrial = remainingTime > 0
-	const timeLeft = inTrial
-		? `${Math.floor(remainingTime / 60000)}m ${Math.floor(
-				(remainingTime % 60000) / 1000
-			)}s`
+	const inTrial = !user.hasValidSubscription && remainingTime > 0
+	const trialTimeLeft = inTrial
+		? `${Math.floor(remainingTime / 60000)}m ${Math.floor((remainingTime % 60000) / 1000)}s`
 		: ''
 
 	return (
@@ -339,18 +178,67 @@ const UnpaidSection: React.FC<{
 				/>
 			</ConfigItem>
 
-			{inTrial ? (
-				<TrialSection
-					timeLeft={timeLeft}
-					onGetSolution={onGetSolution}
-					onSubscribe={onSubscribe}
-					onLogout={onLogout}
-				/>
+			{user.hasValidSubscription ? (
+				// 已订阅用户
+				<>
+					<Button
+						variant='secondary'
+						onClick={onGetSolution}
+						className='full-width-button'
+					>
+						Get Solution
+					</Button>
+					<ShortcutHint />
+				</>
+			) : inTrial ? (
+				// 未订阅且处于试用期内
+				<div className='trial-section'>
+					<p>Your free trial is ongoing. Remaining time: {trialTimeLeft}</p>
+					<Button
+						variant='secondary'
+						onClick={onGetSolution}
+						className='full-width-button'
+					>
+						Get Solution
+					</Button>
+					<Button
+						variant='primary'
+						onClick={onSubscribe}
+						className='full-width-button'
+					>
+						Subscribe Now
+					</Button>
+					<Button
+						variant='secondary'
+						onClick={onLogout}
+						className='full-width-button'
+					>
+						Logout
+					</Button>
+				</div>
 			) : (
-				<ExpiredSection onSubscribe={onSubscribe} onLogout={onLogout} />
+				// 未订阅且试用期已结束
+				<div className='expired-section'>
+					<p>
+						Your free trial has ended. Please subscribe to continue using the
+						solution feature.
+					</p>
+					<Button
+						variant='primary'
+						onClick={onSubscribe}
+						className='full-width-button'
+					>
+						Subscribe Now
+					</Button>
+					<Button
+						variant='secondary'
+						onClick={onLogout}
+						className='full-width-button'
+					>
+						Logout
+					</Button>
+				</div>
 			)}
-
-			<ShortcutHint />
 		</>
 	)
 }
@@ -362,7 +250,6 @@ async function handleGetSolutionAction(
 	language: string,
 	context: string
 ) {
-	// 不再需要 openaiKey，直接保存设置项
 	await new Promise<void>(resolve => {
 		chrome.storage.sync.set({ model, language, context }, resolve)
 	})
@@ -437,7 +324,7 @@ const Popup: React.FC = () => {
 					email: data.user.email,
 					photo: data.user.photoURL,
 					hasValidSubscription: data.user.hasValidSubscription,
-					loginTime: data.user.loginTime
+					creationTime: data.user.creationTime
 				})
 			}
 		})
@@ -454,7 +341,7 @@ const Popup: React.FC = () => {
 					email: changes.user.newValue.email,
 					photo: changes.user.newValue.photoURL,
 					hasValidSubscription: changes.user.newValue.hasValidSubscription,
-					loginTime: changes.user.newValue.loginTime
+					creationTime: changes.user.newValue.creationTime
 				})
 			}
 		}
@@ -464,12 +351,22 @@ const Popup: React.FC = () => {
 		}
 	}, [])
 
-	// 试用期计时器
+	useEffect(() => {
+		chrome.storage.sync.set({ model, language, context }, () => {
+			if (chrome.runtime.lastError) {
+				console.error('Failed to save config:', chrome.runtime.lastError)
+			} else {
+				console.log('Config saved:', { model, language, context })
+			}
+		})
+	}, [model, language, context])
+
+	// 使用 creationTime 来计算试用剩余时间
 	useEffect(() => {
 		if (user && !user.hasValidSubscription) {
 			const TRIAL_DURATION = 30 * 60 * 1000
 			const updateRemaining = () => {
-				const elapsed = Date.now() - user.loginTime
+				const elapsed = Date.now() - user.creationTime
 				const remain = TRIAL_DURATION - elapsed
 				setRemainingTime(remain > 0 ? remain : 0)
 			}
@@ -481,7 +378,6 @@ const Popup: React.FC = () => {
 		}
 	}, [user])
 
-	// 事件处理函数
 	const handleGetSolution = () =>
 		handleGetSolutionAction(model, language, context)
 	const handleLogin = () => handleLoginAction()
@@ -491,23 +387,9 @@ const Popup: React.FC = () => {
 	let content
 	if (!user) {
 		content = <LoginSection onLogin={handleLogin} />
-	} else if (user.hasValidSubscription) {
-		content = (
-			<PaidSection
-				user={user}
-				onLogout={handleLogout}
-				model={model}
-				setModel={setModel}
-				language={language}
-				setLanguage={setLanguage}
-				context={context}
-				setContext={setContext}
-				onGetSolution={handleGetSolution}
-			/>
-		)
 	} else {
 		content = (
-			<UnpaidSection
+			<UserDashboard
 				user={user}
 				onLogout={handleLogout}
 				model={model}

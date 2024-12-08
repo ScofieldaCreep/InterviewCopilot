@@ -15,9 +15,10 @@ const manifest = deepmerge(
 		default_locale: 'en',
 		name: 'Algo Ace',
 		version: packageJson.version,
-		key: 'TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF0ekU3Zm1SMTROZDdWQXdhM0lFOFR5MGlXemFSNitIdWNJekNhN0p2UTVXS2dFY0c0NDMvRDNjK05HeEJTM0RibytVdkdFZlM0d05uUmNkQVNlalNtbm1oelEzbnJlalNKcXpXekVGNnh0bU5saUpQTzhYZE1RYng5TW1rbjduN29wUWlHczBmaWZvR0hiR1hEOUFlbFFNcU90UHRxQzEzcW93SWN0bGU3ZkdWb21yUmtLQXdoS1JMSTVua1lORStUcStscnB5bXpsMmR4UnFTWWdnTEZqK3hYdUdrWjlPd01JSWRhOU0wcE1vL3hqZ1I2WEJhNit2TlQ2U3pQRXNSUER6ZXp3YjZ0SUZPdjlXRUxVZ2YyUmM4aUlvYm1WSFhzamtPUTVERUFvVFdUdGphTFREajBDMjdYOTJ5YWJSWGxDSFJYclF5K3YwVUJGbU9rRmV0K0h1Y0l6Q2E3SnZRNVdLZ0VjRzQ0My9EM2MrTkd4QlMzRGJvK1V2R0VmUzR3Tm5SY2RBU2VqU21ubWh6UTNucmVqU0pxeld6RUY2eHRtTmxpSlBPOFhkTVFieDlNbWtuN243b3BRaUdzMGZpZm9HSGJHWEQ5QWVsUU1xT3RQdHFDMTNxb3dJY3RsZTdmR1ZvbXJSa0tBd2hLUkxJNW5rWU5FK1RxK2xycHltemwyZHhScVNZZ2dMRmoreFh1R2taOU93TUlJZGE5TTBwTW8veGpnUjZYQmE2K3ZOVDZTelBFc1JQRHplendiNnRJRk92OVdFTFVnZjJSYzhpSW9ibVZIWHNqa09RNURFQW9UV1R0amFMVERqMEMyN1g5MnlhYlJYbENIUlhyUXkrdjBVQkZtT2tGZXQK',
+		// key: 'TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF0ekU3Zm1SMTROZDdWQXdhM0lFOFR5MGlXemFSNitIdWNJekNhN0p2UTVXS2dFY0c0NDMvRDNjK05HeEJTM0RibytVdkdFZlM0d05uUmNkQVNlalNtbm1oelEzbnJlalNKcXpXekVGNnh0bU5saUpQTzhYZE1RYng5TW1rbjduN29wUWlHczBmaWZvR0hiR1hEOUFlbFFNcU90UHRxQzEzcW93SWN0bGU3ZkdWb21yUmtLQXdoS1JMSTVua1lORStUcStscnB5bXpsMmR4UnFTWWdnTEZqK3hYdUdrWjlPd01JSWRhOU0wcE1vL3hqZ1I2WEJhNit2TlQ2U3pQRXNSUER6ZXp3YjZ0SUZPdjlXRUxVZ2YyUmM4aUlvYm1WSFhzamtPUTVERUFvVFdUdGphTFREajBDMjdYOTJ5YWJSWGxDSFJYclF5K3YwVUJGbU9rRmV0K0h1Y0l6Q2E3SnZRNVdLZ0VjRzQ0My9EM2MrTkd4QlMzRGJvK1V2R0VmUzR3Tm5SY2RBU2VqU21ubWh6UTNucmVqU0pxeld6RUY2eHRtTmxpSlBPOFhkTVFieDlNbWtuN243b3BRaUdzMGZpZm9HSGJHWEQ5QWVsUU1xT3RQdHFDMTNxb3dJY3RsZTdmR1ZvbXJSa0tBd2hLUkxJNW5rWU5FK1RxK2xycHltemwyZHhScVNZZ2dMRmoreFh1R2taOU93TUlJZGE5TTBwTW8veGpnUjZYQmE2K3ZOVDZTelBFc1JQRHplendiNnRJRk92OVdFTFVnZjJSYzhpSW9ibVZIWHNqa09RNURFQW9UV1R0amFMVERqMEMyN1g5MnlhYlJYbENIUlhyUXkrdjBVQkZtT2tGZXQK',
 		description:
-			'An AI Driven Interview Copilot, 帮助面试者快速获取算法题解答的无敌Buff',
+			'An AI-driven interview copilot, empowering you with game-changing solutions to even the toughest LeetCode problems, ensuring unmatched confidence and success.',
+
 		host_permissions: ['<all_urls>'],
 		permissions: [
 			'storage',
@@ -33,16 +34,22 @@ const manifest = deepmerge(
 			'identity.email'
 		],
 		background: {
-			service_worker: 'background.iife.js',
+			service_worker: 'background.js',
 			type: 'module'
 		},
 		action: {
 			default_popup: 'popup/index.html',
-			default_icon: 'icon-34.png'
+			default_icon: 'icon48.png'
 		},
 		icons: {
-			128: 'icon-128.png'
+			16: 'icon16.png',
+			19: 'icon19.png',
+			32: 'icon32.png',
+			38: 'icon38.png',
+			48: 'icon48.png',
+			128: 'icon128.png'
 		},
+
 		content_scripts: [
 			{
 				matches: ['http://*/*', 'https://*/*', '<all_urls>'],
@@ -61,8 +68,10 @@ const manifest = deepmerge(
 					'*.js',
 					'*.css',
 					'*.svg',
-					'icon-128.png',
-					'icon-34.png'
+					'icon16.png',
+					'icon32.png',
+					'icon48.png',
+					'icon128.png'
 				],
 				matches: ['*://*/*']
 			},
@@ -85,14 +94,14 @@ const manifest = deepmerge(
 					default: 'Alt+Shift+Y',
 					mac: 'Alt+Shift+Y'
 				},
-				description: '打开配置页面'
+				description: 'Open Config Popup'
 			},
 			get_answer: {
 				suggested_key: {
 					default: 'Alt+Q',
 					mac: 'Alt+Q'
 				},
-				description: '直接获取题解'
+				description: 'Get Solution'
 			}
 		},
 		oauth2: {
@@ -103,9 +112,6 @@ const manifest = deepmerge(
 				'https://www.googleapis.com/auth/userinfo.profile'
 			]
 		}
-		// content_security_policy: {
-		// 	extension_pages: "script-src 'self' ; object-src 'self'"
-		// }
 	},
 	!isFirefox
 )
