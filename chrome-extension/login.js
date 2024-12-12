@@ -12,7 +12,7 @@ import {
 	orderBy,
 	limit
 } from 'firebase/firestore'
-import { auth, db } from '../firebase-init.js'
+import { auth, db } from './src/firebase-init.js'
 
 function getAuthToken() {
 	return new Promise((resolve, reject) => {

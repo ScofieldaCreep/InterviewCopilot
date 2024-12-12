@@ -13,6 +13,8 @@
 		"utils",
 		"vite.config.mts",
 		"../node_modules/@types",
-		"../offscreen/offscreen"
+		"../offscreen/offscreen",
+		"subscribe.js",
+		"login.js"
 	]
 }

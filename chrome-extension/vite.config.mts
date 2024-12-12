@@ -19,15 +19,11 @@ export default defineConfig({
 		}
 	},
 	plugins: [
-		libAssetsPlugin({
-			outputPath: outDir
-		}) as PluginOption,
+		libAssetsPlugin({ outputPath: outDir }) as PluginOption,
 		watchPublicPlugin(),
 		makeManifestPlugin({ outDir }),
 		isDev && watchRebuildPlugin({ reload: true }),
-		checker({
-			typescript: false
-		}) as unknown as PluginOption
+		checker({ typescript: false }) as unknown as PluginOption
 	],
 	publicDir: resolve(rootDir, 'public'),
 	build: {
@@ -37,15 +33,17 @@ export default defineConfig({
 		minify: isProduction,
 		reportCompressedSize: isProduction,
 		watch: watchOption,
+		assetsDir: '.',
 		rollupOptions: {
 			input: {
 				background: resolve(srcDir, 'background/index.ts'),
-				login: resolve(srcDir, 'login/login.html'),
-				subscribe: resolve(srcDir, 'subscribe/subscribe.html')
+				login: resolve(rootDir, 'login.html'),
+				subscribe: resolve(rootDir, 'subscribe.html')
 			},
 			output: {
-				format: 'esm', // 使用ESM格式
-				entryFileNames: '[name].js' // 输出 background.js, login.js, subscribe.js
+				format: 'esm',
+				entryFileNames: '[name].js',
+				assetFileNames: '[name][ext]'
 			},
 			external: ['chrome']
 		}

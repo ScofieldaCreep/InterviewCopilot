@@ -10,7 +10,7 @@ import {
 	orderBy,
 	limit
 } from 'firebase/firestore'
-import { db } from '../firebase-init.js'
+import { db } from './src/firebase-init.js'
 
 async function getUserFromStorage() {
 	return new Promise(resolve => {
@@ -118,7 +118,7 @@ function renderRetry(container, message, onRetry) {
 document.addEventListener('DOMContentLoaded', async () => {
 	const container = document.querySelector('.container')
 	const PRICE_ID = 'price_1QTjS2DzYvxUqt5ag47kVNwF' // not test mode !
-
+	// const PRICE_ID = 'price_1QTHqwDzYvxUqt5aWYmd8loM' // test mode !
 	const user = await getUserFromStorage()
 	if (!user || !user.email) {
 		renderError(container, 'Please login first before subscribing.')

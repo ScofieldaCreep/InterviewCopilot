@@ -15,7 +15,7 @@ const firebaseConfig = {
 }
 
 const app = initializeApp(firebaseConfig)
-const functions = getFunctions(app, 'us-central1')
+const functions = getFunctions(app)
 const db = getFirestore(app)
 const auth = getAuth(app)
 

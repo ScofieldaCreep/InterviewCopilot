@@ -20,6 +20,7 @@ async function getApiConfig() {
 }
 
 async function callOpenAIThroughBackend(prompt: string, model: string) {
+	console.log('callOpenAIThroughBackend', prompt, model)
 	const getOpenAIAnswer = httpsCallable(functions, 'getAIResponse')
 	const response = await getOpenAIAnswer({ prompt, model })
 	return response.data.answer
@@ -340,7 +341,7 @@ function generateResultHTML(answer: string) {
 </html>`.trim()
 }
 
-async function querySolution(tabOrId) {
+async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 	const tabId = typeof tabOrId === 'number' ? tabOrId : tabOrId.id
 	const user = await getUser()
 	const validSubscription = await isUserSubscriptionValid(user)
@@ -372,6 +373,7 @@ async function querySolution(tabOrId) {
 		.replace('{context}', context || '')
 
 	const answer = await callOpenAIThroughBackend(prompt, model)
+	console.log('answer', answer)
 	await showAnswer(answer)
 }
 
