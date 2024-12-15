@@ -1,14 +1,14 @@
 // subscribe.js
 
 import {
-	collection,
 	addDoc,
-	onSnapshot,
-	query,
-	where,
+	collection,
 	getDocs,
+	limit,
+	onSnapshot,
 	orderBy,
-	limit
+	query,
+	where
 } from 'firebase/firestore'
 import { db } from './src/firebase-init.js'
 
@@ -44,8 +44,8 @@ async function createCheckoutSession(uid, priceId, userEmail) {
 	)
 	const sessionData = {
 		price: priceId,
-		success_url: 'https://chizhang.love/',
-		cancel_url: 'https://example.com/cancel',
+		success_url: 'https://algo-ace-next.vercel.app/',
+		cancel_url: 'https://algo-ace-next.vercel.app/',
 		mode: 'subscription',
 		metadata: { userId: uid, userEmail }
 	}

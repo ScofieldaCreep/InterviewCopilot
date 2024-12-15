@@ -18,8 +18,11 @@
 	"dependencies": {
 		"@extension/shared": "workspace:*",
 		"@extension/storage": "workspace:*",
-		"webextension-polyfill": "^0.12.0",
-		"firebase": "^11.0.2"
+		"firebase": "^11.0.2",
+		"highlight.js": "^11.11.0",
+		"marked": "^15.0.4",
+		"recaptcha": "^1.2.1",
+		"webextension-polyfill": "^0.12.0"
 	},
 	"devDependencies": {
 		"@extension/dev-utils": "workspace:*",

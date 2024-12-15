@@ -1,3 +1,4 @@
+// pages/content/src/index.ts
 // 类型定义
 interface ContentResponse {
 	success: boolean
@@ -13,7 +14,7 @@ chrome.runtime.onMessage.addListener(
 		sender: chrome.runtime.MessageSender,
 		sendResponse: (response: ContentResponse) => void
 	) => {
-		console.log('Received message:', request)
+		// console.log('Received message:', request)
 
 		if (request.action === 'getPageContent') {
 			try {
@@ -27,10 +28,10 @@ chrome.runtime.onMessage.addListener(
 						.join('\n')
 				}
 
-				console.log('Sending response:', content)
+				// console.log('Sending response:', content)
 				sendResponse(content)
 			} catch (error) {
-				console.error('Content script error:', error)
+				// console.error('Content script error:', error)
 				sendResponse({
 					success: false,
 					error: error instanceof Error ? error.message : 'Unknown error'

@@ -1,26 +1,41 @@
 // index.ts - 后台逻辑
-import { db, functions } from '../firebase-init.js'
-import { httpsCallable } from 'firebase/functions'
 import {
 	collection,
 	getDocs,
-	query,
-	where,
+	limit,
 	orderBy,
-	limit
+	query,
+	where
 } from 'firebase/firestore'
+import { httpsCallable } from 'firebase/functions'
+import hljs from 'highlight.js'
+import { marked } from 'marked'
+import { db, functions } from '../firebase-init.js'
+
+function parseMarkdown(answer: string) {
+	return marked.parse(answer, {
+		gfm: true,
+		breaks: true,
+		highlight: function (code: string, lang: string) {
+			const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+			return hljs.highlight(code, { language }).value
+		}
+	})
+}
 
 async function getApiConfig() {
-	const { model, language, context } = await chrome.storage.sync.get([
-		'model',
-		'language',
-		'context'
-	])
-	return { model, language, context }
+	const { model, language, context, programmingLanguage } =
+		await chrome.storage.sync.get([
+			'model',
+			'language',
+			'context',
+			'programmingLanguage'
+		])
+	return { model, language, context, programmingLanguage }
 }
 
 async function callOpenAIThroughBackend(prompt: string, model: string) {
-	console.log('callOpenAIThroughBackend', prompt, model)
+	// console.log('callOpenAIThroughBackend', prompt, model)
 	const getOpenAIAnswer = httpsCallable(functions, 'getAIResponse')
 	const response = await getOpenAIAnswer({ prompt, model })
 	return response.data.answer
@@ -49,7 +64,7 @@ async function checkPaymentStatus(userId: string): Promise<boolean> {
 async function refreshUserData() {
 	const user = await getUser()
 	if (!user || !user.uid) {
-		console.error('No user found in storage, cannot refresh user data.')
+		// console.error('No user found in storage, cannot refresh user data.')
 		return
 	}
 
@@ -62,7 +77,7 @@ async function refreshUserData() {
 	await new Promise<void>(resolve => {
 		chrome.storage.sync.set({ user: updatedUser }, resolve)
 	})
-	console.log('User data refreshed:', updatedUser)
+	// console.log('User data refreshed:', updatedUser)
 }
 
 async function isUserSubscriptionValid(user) {
@@ -88,10 +103,10 @@ async function injectContentScript(tabId: number) {
 			files: ['content/index.js']
 		})
 	} catch (error) {
-		console.log(
-			'Content script injection error (maybe already injected):',
-			error
-		)
+		// console.log(
+		// 	'Content script injection error (maybe already injected):',
+		// 	error
+		// )
 	}
 }
 
@@ -117,7 +132,10 @@ function getLanguagePrompt(lang: string) {
 }
 
 async function showAnswer(answer: string) {
-	const html = generateResultHTML(answer)
+	// 后台提前解析Markdown为HTML
+	const parsedContent = parseMarkdown(answer)
+
+	const html = generateResultHTML(parsedContent)
 	try {
 		await chrome.windows.create({
 			url: `data:text/html,${encodeURIComponent(html)}`,
@@ -134,16 +152,14 @@ async function showAnswer(answer: string) {
 	}
 }
 
-function generateResultHTML(answer: string) {
+function generateResultHTML(parsedContent: string) {
 	return `
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8">
     <title>AlgoAce Solution</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.2.12/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="${chrome.runtime.getURL('vendor/highlight.min.css')}">
     <style>
       body {
         margin: 0;
@@ -313,32 +329,15 @@ function generateResultHTML(answer: string) {
       .hljs-title { color: #61afef; }
       .hljs-params { color: #e06c75; }
     </style>
-  </head>
-  <body>
-    <div class="container">
-      <article class="markdown-body" id="content"></article>
-    </div>
-    <script>
-      marked.setOptions({
-        gfm: true,
-        breaks: true,
-        highlight: function(code, lang) {
-          const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-          return hljs.highlight(code, { language }).value;
-        },
-        langPrefix: 'hljs language-'
-      });
-
-      document.getElementById('content').innerHTML = marked.parse(${JSON.stringify(
-				answer
-			)});
-
-      document.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightBlock(block);
-      });
-    </script>
-  </body>
-</html>`.trim()
+    </head>
+    <body>
+      <div class="container">
+        <!-- 直接使用后台解析好的HTML -->
+        <article class="markdown-body" id="content">${parsedContent}</article>
+      </div>
+    </body>
+  </html>
+  `.trim()
 }
 
 async function querySolution(tabOrId: number | chrome.tabs.Tab) {
@@ -346,12 +345,67 @@ async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 	const user = await getUser()
 	const validSubscription = await isUserSubscriptionValid(user)
 	if (!user) throw new Error('Please login first.')
-	if (!validSubscription) throw new Error('Trial expired. Please subscribe.')
+	if (!validSubscription) {
+		await chrome.scripting.executeScript({
+			target: { tabId: tabId! },
+			func: () => {
+				alert('Algo Ace trial expired. Please subscribe and enjoy.')
+			}
+		})
+		return
+	}
 
-	const { model, language, context } = await getApiConfig()
+	const { lastQueryTime, lastContent, lastContentQueryTime } =
+		await chrome.storage.sync.get([
+			'lastQueryTime',
+			'lastContent',
+			'lastContentQueryTime'
+		])
+	// console.log('lastQueryTime', lastQueryTime)
+	// console.log('lastContent', lastContent)
+	// console.log('lastContentQueryTime', lastContentQueryTime)
+
+	const now = Date.now()
+
+	// 检查30秒限速
+	if (lastQueryTime && now - lastQueryTime < 15000) {
+		// 30秒内多次请求，直接return不执行
+		await chrome.scripting.executeScript({
+			target: { tabId: tabId! },
+			func: () => {
+				alert(
+					'Algo Ace Rate Limited. Please do not submit duplicate requests in 15s.'
+				)
+			}
+		})
+		return
+	}
+
+	const { model, language, context, programmingLanguage } = await getApiConfig()
 
 	await injectContentScript(tabId)
 	const pageContent = await fetchPageContent(tabId)
+
+	// 检查内容是否未更新且间隔不足2分钟
+	if (
+		lastContent === pageContent &&
+		lastContentQueryTime &&
+		now - lastContentQueryTime < 120000
+	) {
+		await chrome.scripting.executeScript({
+			target: { tabId: tabId! },
+			func: () => {
+				alert('Algo Ace : Please do not submit requests with same content.')
+			}
+		})
+		return
+	}
+
+	await chrome.storage.sync.set({
+		lastQueryTime: now,
+		lastContent: pageContent,
+		lastContentQueryTime: now
+	})
 
 	const DEFAULT_PROMPT_TEMPLATE = `
     请分析以下算法题目，并给出详细解答：
@@ -359,7 +413,7 @@ async function querySolution(tabOrId: number | chrome.tabs.Tab) {
   
     要求：
     1. 使用{language}, 使用markdown格式回答
-    2. 使用Python3语言, 并保持Python3的代码风格
+    2. 使用{programmingLanguage}语言, 并保持{programmingLanguage}的代码风格
     3. 分析题目关键点和考察要点
     4. 给出最优解法的思路和推导过程
     5. 提供完整的代码实现（包含必要的注释）
@@ -371,9 +425,9 @@ async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 	const prompt = DEFAULT_PROMPT_TEMPLATE.replace('{content}', pageContent)
 		.replace('{language}', getLanguagePrompt(language))
 		.replace('{context}', context || '')
-
+		.replace('{programmingLanguage}', programmingLanguage)
 	const answer = await callOpenAIThroughBackend(prompt, model)
-	console.log('answer', answer)
+	// console.log('answer', answer)
 	await showAnswer(answer)
 }
 
@@ -418,7 +472,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 		refreshUserData()
 			.then(() => sendResponse({ success: true }))
 			.catch(err => {
-				console.error('Failed to refresh user data:', err)
+				// console.error('Failed to refresh user data:', err)
 				sendResponse({ success: false, error: err.message })
 			})
 		return true

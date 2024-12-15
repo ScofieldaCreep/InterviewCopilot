@@ -1,5 +1,5 @@
-import fs from 'node:fs'
 import deepmerge from 'deepmerge'
+import fs from 'node:fs'
 
 const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'))
 
@@ -18,20 +18,15 @@ const manifest = deepmerge(
 		key: 'TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF0ekU3Zm1SMTROZDdWQXdhM0lFOFR5MGlXemFSNitIdWNJekNhN0p2UTVXS2dFY0c0NDMvRDNjK05HeEJTM0RibytVdkdFZlM0d05uUmNkQVNlalNtbm1oelEzbnJlalNKcXpXekVGNnh0bU5saUpQTzhYZE1RYng5TW1rbjduN29wUWlHczBmaWZvR0hiR1hEOUFlbFFNcU90UHRxQzEzcW93SWN0bGU3ZkdWb21yUmtLQXdoS1JMSTVua1lORStUcStscnB5bXpsMmR4UnFTWWdnTEZqK3hYdUdrWjlPd01JSWRhOU0wcE1vL3hqZ1I2WEJhNit2TlQ2U3pQRXNSUER6ZXp3YjZ0SUZPdjlXRUxVZ2YyUmM4aUlvYm1WSFhzamtPUTVERUFvVFdUdGphTFREajBDMjdYOTJ5YWJSWGxDSFJYclF5K3YwVUJGbU9rRmV0K0h1Y0l6Q2E3SnZRNVdLZ0VjRzQ0My9EM2MrTkd4QlMzRGJvK1V2R0VmUzR3Tm5SY2RBU2VqU21ubWh6UTNucmVqU0pxeld6RUY2eHRtTmxpSlBPOFhkTVFieDlNbWtuN243b3BRaUdzMGZpZm9HSGJHWEQ5QWVsUU1xT3RQdHFDMTNxb3dJY3RsZTdmR1ZvbXJSa0tBd2hLUkxJNW5rWU5FK1RxK2xycHltemwyZHhScVNZZ2dMRmoreFh1R2taOU93TUlJZGE5TTBwTW8veGpnUjZYQmE2K3ZOVDZTelBFc1JQRHplendiNnRJRk92OVdFTFVnZjJSYzhpSW9ibVZIWHNqa09RNURFQW9UV1R0amFMVERqMEMyN1g5MnlhYlJYbENIUlhyUXkrdjBVQkZtT2tGZXQK',
 		description:
 			'Your AI-driven interview pal. Easy approach to correct solutions for most LeetCode & Hackerrank problems. All In One Click.',
-
-		host_permissions: ['<all_urls>'],
 		permissions: [
-			'storage',
-			'scripting',
-			'tabs',
-			'notifications',
-			'commands',
-			'offscreen',
-			'activeTab',
-			'tabGroups',
-			'windows',
-			'identity',
-			'identity.email'
+			'storage', // 用于访问 chrome.storage API，在扩展中存储和读取数据（例如用户信息、设置信息）
+			'scripting', // 用于通过 chrome.scripting.executeScript 动态向页面注入脚本
+			'tabs', // 用于查询和操作浏览器标签页（如获取当前tab信息、切换tab等）
+			'commands', // 用于响应用户定义的快捷键（chrome.commands.onCommand事件）
+			'activeTab', // 当用户与扩展交互（如点击action icon）时，临时获得访问当前活动标签页的权限，可对当前页执行脚本
+			'windows', // 用于创建、修改和查询浏览器窗口（如chrome.windows.create创建popup窗口）
+			'identity', // 用于使用chrome.identity获取OAuth令牌，实现Google账户认证相关功能
+			'identity.email' // 在使用identity获取用户信息时，可访问用户的基本个人资料（如email），确保你要使用profile信息才需要这个权限
 		],
 		background: {
 			service_worker: 'background.js',
@@ -49,17 +44,6 @@ const manifest = deepmerge(
 			48: 'icon48.png',
 			128: 'icon128.png'
 		},
-
-		content_scripts: [
-			{
-				matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-				js: ['content/index.js']
-			},
-			{
-				matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-				css: ['content.css'] // public folder
-			}
-		],
 		web_accessible_resources: [
 			{
 				resources: [
@@ -71,7 +55,8 @@ const manifest = deepmerge(
 					'icon16.png',
 					'icon32.png',
 					'icon48.png',
-					'icon128.png'
+					'icon128.png',
+					'highlight.min.css'
 				],
 				matches: ['*://*/*']
 			},
@@ -80,12 +65,8 @@ const manifest = deepmerge(
 				matches: ['https://interviewcopilot-443620.web.app/*']
 			},
 			{
-				resources: ['offscreen.html'],
-				matches: ['<all_urls>']
-			},
-			{
 				resources: ['firebase/*.js', 'firebase/*/*.js'],
-				matches: ['<all_urls>']
+				matches: ['http://*/*', 'https://*/*']
 			}
 		],
 		commands: {

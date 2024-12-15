@@ -15,6 +15,7 @@
 		"../node_modules/@types",
 		"../offscreen/offscreen",
 		"subscribe.js",
-		"login.js"
+		"login.js",
+		"src/vendor"
 	]
 }

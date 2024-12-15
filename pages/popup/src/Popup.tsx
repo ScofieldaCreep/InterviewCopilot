@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import './Popup.css'
 
 interface User {
@@ -113,6 +113,8 @@ const UserDashboard: React.FC<{
 	setModel: React.Dispatch<React.SetStateAction<string>>
 	language: string
 	setLanguage: React.Dispatch<React.SetStateAction<string>>
+	programmingLanguage: string
+	setProgrammingLanguage: React.Dispatch<React.SetStateAction<string>>
 	context: string
 	setContext: React.Dispatch<React.SetStateAction<string>>
 	remainingTime: number
@@ -125,6 +127,8 @@ const UserDashboard: React.FC<{
 	setModel,
 	language,
 	setLanguage,
+	programmingLanguage,
+	setProgrammingLanguage,
 	context,
 	setContext,
 	remainingTime,
@@ -146,9 +150,9 @@ const UserDashboard: React.FC<{
 					value={model}
 					onChange={e => setModel(e.target.value)}
 					options={[
-						{ value: 'gpt-3.5-turbo', label: 'Swift' },
-						{ value: 'gpt-4o', label: 'Accurate' },
-						{ value: 'o1-mini', label: 'Monster' }
+						{ value: 'gpt-4o-mini', label: 'gpt-4o' },
+						{ value: 'gpt-4o', label: 'o1-mini' },
+						{ value: 'o1-mini', label: 'o1-preview' }
 					]}
 				/>
 			</ConfigItem>
@@ -164,6 +168,26 @@ const UserDashboard: React.FC<{
 						{ value: 'ja', label: 'Japanese (日本語)' },
 						{ value: 'es', label: 'Spanish (Español)' },
 						{ value: 'hi', label: 'Hindi (हिन्दी)' }
+					]}
+				/>
+			</ConfigItem>
+
+			<ConfigItem label='Programming Language'>
+				<Select
+					id='programmingLanguage'
+					value={programmingLanguage}
+					onChange={e => setProgrammingLanguage(e.target.value)}
+					options={[
+						{ value: 'python', label: 'Python' },
+						{ value: 'java', label: 'Java' },
+						{ value: 'cpp', label: 'C++' },
+						{ value: 'js', label: 'JavaScript' },
+						{ value: 'go', label: 'Go' },
+						{ value: 'rust', label: 'Rust' },
+						{ value: 'c', label: 'C' },
+						{ value: 'kotlin', label: 'Kotlin' },
+						{ value: 'swift', label: 'Swift' },
+						{ value: 'typescript', label: 'TypeScript' }
 					]}
 				/>
 			</ConfigItem>
@@ -220,8 +244,8 @@ const UserDashboard: React.FC<{
 				// 未订阅且试用期已结束
 				<div className='expired-section'>
 					<p>
-						Your free trial has ended. Please subscribe to continue using the
-						solution feature.
+						Your free trial has ended. Subscribe to enjoy unlimited interview
+						buff.
 					</p>
 					<Button
 						variant='primary'
@@ -229,13 +253,6 @@ const UserDashboard: React.FC<{
 						className='full-width-button'
 					>
 						Subscribe Now
-					</Button>
-					<Button
-						variant='secondary'
-						onClick={onLogout}
-						className='full-width-button'
-					>
-						Logout
 					</Button>
 				</div>
 			)}
@@ -260,16 +277,16 @@ async function handleGetSolutionAction(
 				.sendMessage({ action: 'getAnswer', tabId: tab.id })
 				.then(response => {
 					if (response?.error) {
-						console.error('获取答案错误:', response.error)
+						// console.error('获取答案错误:', response.error)
 					} else {
-						console.log('答案获取成功')
+						// console.log('答案获取成功')
 					}
 				})
 				.catch(error => {
-					console.error('消息发送失败:', error)
+					// console.error('消息发送失败:', error)
 				})
 		} else {
-			console.error('无效的标签页')
+			// console.error('无效的标签页')
 		}
 	})
 }
@@ -277,9 +294,9 @@ async function handleGetSolutionAction(
 function handleLoginAction() {
 	chrome.runtime.sendMessage({ action: 'login' }, response => {
 		if (response && response.success) {
-			console.log('登录窗口已打开，请在弹出的窗口中完成登录。')
+			// console.log('登录窗口已打开，请在弹出的窗口中完成登录。')
 		} else {
-			console.error('登录失败', response?.error)
+			// console.error('登录失败', response?.error)
 		}
 	})
 }
@@ -289,17 +306,17 @@ function handleLogoutAction(
 ) {
 	chrome.storage.sync.remove('user', () => {
 		if (chrome.runtime.lastError) {
-			console.error('登出失败:', chrome.runtime.lastError)
+			// console.error('登出失败:', chrome.runtime.lastError)
 		} else {
 			setUser(null)
-			console.log('用户已成功注销')
+			// console.log('用户已成功注销')
 		}
 	})
 }
 
 function handleSubscribeAction() {
 	chrome.runtime.sendMessage({ action: 'subscribe' }, response => {
-		console.log('订阅响应:', response)
+		// console.log('订阅响应:', response)
 	})
 }
 
@@ -311,23 +328,29 @@ const Popup: React.FC = () => {
 	const [context, setContext] = useState('')
 	const [user, setUser] = useState<User | null>(null)
 	const [remainingTime, setRemainingTime] = useState<number>(0)
+	const [programmingLanguage, setProgrammingLanguage] = useState('python')
 
 	// 初始化数据
 	useEffect(() => {
-		chrome.storage.sync.get(['model', 'language', 'context', 'user'], data => {
-			if (data.model) setModel(data.model)
-			if (data.language) setLanguage(data.language)
-			if (data.context) setContext(data.context)
-			if (data.user) {
-				setUser({
-					name: data.user.name,
-					email: data.user.email,
-					photo: data.user.photoURL,
-					hasValidSubscription: data.user.hasValidSubscription,
-					creationTime: data.user.creationTime
-				})
+		chrome.storage.sync.get(
+			['model', 'language', 'context', 'user', 'programmingLanguage'],
+			data => {
+				if (data.model) setModel(data.model)
+				if (data.language) setLanguage(data.language)
+				if (data.context) setContext(data.context)
+				if (data.programmingLanguage)
+					setProgrammingLanguage(data.programmingLanguage)
+				if (data.user) {
+					setUser({
+						name: data.user.name,
+						email: data.user.email,
+						photo: data.user.photoURL,
+						hasValidSubscription: data.user.hasValidSubscription,
+						creationTime: data.user.creationTime
+					})
+				}
 			}
-		})
+		)
 	}, [])
 
 	// 监听storage变化
@@ -352,14 +375,17 @@ const Popup: React.FC = () => {
 	}, [])
 
 	useEffect(() => {
-		chrome.storage.sync.set({ model, language, context }, () => {
-			if (chrome.runtime.lastError) {
-				console.error('Failed to save config:', chrome.runtime.lastError)
-			} else {
-				console.log('Config saved:', { model, language, context })
+		chrome.storage.sync.set(
+			{ model, language, context, programmingLanguage },
+			() => {
+				if (chrome.runtime.lastError) {
+					// console.error('Failed to save config:', chrome.runtime.lastError)
+				} else {
+					// console.log('Config saved:', { model, language, context })
+				}
 			}
-		})
-	}, [model, language, context])
+		)
+	}, [model, language, context, programmingLanguage])
 
 	// 使用 creationTime 来计算试用剩余时间
 	useEffect(() => {
@@ -396,6 +422,8 @@ const Popup: React.FC = () => {
 				setModel={setModel}
 				language={language}
 				setLanguage={setLanguage}
+				programmingLanguage={programmingLanguage}
+				setProgrammingLanguage={setProgrammingLanguage}
 				context={context}
 				setContext={setContext}
 				remainingTime={remainingTime}
