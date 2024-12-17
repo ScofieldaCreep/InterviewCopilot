@@ -21,7 +21,6 @@ const manifest = deepmerge(
 		permissions: [
 			'storage', // 用于访问 chrome.storage API，在扩展中存储和读取数据（例如用户信息、设置信息）
 			'scripting', // 用于通过 chrome.scripting.executeScript 动态向页面注入脚本
-			'tabs', // 用于查询和操作浏览器标签页（如获取当前tab信息、切换tab等）
 			'commands', // 用于响应用户定义的快捷键（chrome.commands.onCommand事件）
 			'activeTab', // 当用户与扩展交互（如点击action icon）时，临时获得访问当前活动标签页的权限，可对当前页执行脚本
 			'windows', // 用于创建、修改和查询浏览器窗口（如chrome.windows.create创建popup窗口）
