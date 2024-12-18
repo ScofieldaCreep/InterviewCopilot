@@ -3,6 +3,8 @@
 import {
 	addDoc,
 	collection,
+	doc,
+	getDoc,
 	getDocs,
 	limit,
 	onSnapshot,
@@ -116,9 +118,15 @@ function renderRetry(container, message, onRetry) {
 
 /** ================== Main Logic (Event Listeners & Initialization) ================== **/
 document.addEventListener('DOMContentLoaded', async () => {
+	const configDocRef = doc(db, 'config', 'stripe')
+	const configSnap = await getDoc(configDocRef)
+	if (!configSnap.exists()) {
+		renderError(container, 'Stripe config not found')
+		return
+	}
+	const PRICE_ID = configSnap.data().priceId_production
+
 	const container = document.querySelector('.container')
-	const PRICE_ID = 'price_1QXMUcDzYvxUqt5aNuXqH8yD' // not test mode !
-	// const PRICE_ID = 'price_1QTHqwDzYvxUqt5aWYmd8loM' // test mode !
 	const user = await getUserFromStorage()
 	if (!user || !user.email) {
 		renderError(container, 'Please login first before subscribing.')
