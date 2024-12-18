@@ -117,7 +117,7 @@ function renderRetry(container, message, onRetry) {
 /** ================== Main Logic (Event Listeners & Initialization) ================== **/
 document.addEventListener('DOMContentLoaded', async () => {
 	const container = document.querySelector('.container')
-	const PRICE_ID = 'price_1QTjS2DzYvxUqt5ag47kVNwF' // not test mode !
+	const PRICE_ID = 'price_1QXMUcDzYvxUqt5aNuXqH8yD' // not test mode !
 	// const PRICE_ID = 'price_1QTHqwDzYvxUqt5aWYmd8loM' // test mode !
 	const user = await getUserFromStorage()
 	if (!user || !user.email) {
