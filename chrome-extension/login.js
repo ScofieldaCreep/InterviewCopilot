@@ -97,12 +97,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 		const creationTimestamp = new Date(creationTime).getTime()
 
 		const userData = {
+			uid: firebaseUser.uid,
 			name: firebaseUser.displayName || '',
 			email: firebaseUser.email || '',
 			photoURL: firebaseUser.photoURL || '',
 			hasValidSubscription,
 			creationTime: creationTimestamp, // 使用创建账号的时间戳来决定试用期
-			uid
 		}
 
 		await saveUserData(userData)

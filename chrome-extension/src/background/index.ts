@@ -1,5 +1,4 @@
 import {
-	// Firebase Firestore
 	collection,
 	doc,
 	getDoc,
@@ -12,22 +11,20 @@ import {
 	limit,
 	DocumentSnapshot,
   } from 'firebase/firestore'
-  import { httpsCallable, HttpsCallableResult } from 'firebase/functions'
+  import { httpsCallable } from 'firebase/functions'
   import hljs from 'highlight.js'
   import { marked } from 'marked'
   import { db, functions } from '../firebase-init.js'
   
-  // 定义API响应类型
+  // ============= 定义接口/类型 =============
   interface AIResponse {
-	answer: string;
+	answer: string
   }
   
-  /**
-   * ============= 工具函数：Markdown 解析 =============
-   */
+  // ============= Markdown 解析工具函数 =============
   function parseMarkdown(answer: string) {
 	const renderer = new marked.Renderer()
-	renderer.code = ({ text, lang = 'plaintext' }: { text: string, lang?: string }) => {
+	renderer.code = ({ text, lang = 'plaintext' }: { text: string; lang?: string }) => {
 	  const language = hljs.getLanguage(lang) ? lang : 'plaintext'
 	  const highlighted = hljs.highlight(text, { language }).value
 	  return `<pre><code class="hljs ${language}">${highlighted}</code></pre>`
@@ -36,29 +33,24 @@ import {
 	marked.setOptions({
 	  renderer,
 	  gfm: true,
-	  breaks: true
+	  breaks: true,
 	})
   
 	return marked.parse(answer) as string
   }
   
-  /**
-   * ============= 工具函数：获取配置项 =============
-   */
+  // ============= 获取 API 配置 =============
   async function getApiConfig() {
-	const { model, language, context, programmingLanguage } =
-	  await chrome.storage.sync.get([
-		'model',
-		'language',
-		'context',
-		'programmingLanguage',
-	  ])
+	const { model, language, context, programmingLanguage } = await chrome.storage.sync.get([
+	  'model',
+	  'language',
+	  'context',
+	  'programmingLanguage',
+	])
 	return { model, language, context, programmingLanguage }
   }
   
-  /**
-   * ============= 工具函数：显示错误提示 =============
-   */
+  // ============= 显示错误提示 (在页面上浮动提示) =============
   async function showErrorMessage(tabId: number, message: string) {
 	await chrome.scripting.executeScript({
 	  target: { tabId },
@@ -83,21 +75,19 @@ import {
 		  }
 		`
 		document.head.appendChild(style)
-
+  
 		const div = document.createElement('div')
 		div.className = 'algo-ace-error'
 		div.textContent = errorMsg
 		document.body.appendChild(div)
-
+  
 		setTimeout(() => div.remove(), 3000)
 	  },
-	  args: [message]
+	  args: [message],
 	})
   }
   
-  /**
-   * ============= 工具函数：调用后端云函数(getAIResponse) =============
-   */
+  // ============= 调用后端云函数(getAIResponse) =============
   async function callOpenAIThroughBackend(prompt: string, model: string, tabId: number) {
 	try {
 	  const getOpenAIAnswer = httpsCallable<any, AIResponse>(functions, 'getAIResponse')
@@ -109,17 +99,13 @@ import {
 	}
   }
   
-  /**
-   * ============= 工具函数：获取当前用户信息(Chrome Sync Storage) =============
-   */
+  // ============= 从 chrome.storage.sync 拿当前用户信息 =============
   async function getUser() {
 	const { user } = await chrome.storage.sync.get('user')
 	return user || null
   }
   
-  /**
-   * ============= 订阅相关：判断用户是否已订阅 =============
-   */
+  // ============= 判断用户是否已有有效订阅 =============
   async function hasActiveSubscription(uid: string, tabId: number): Promise<boolean> {
 	try {
 	  const subscriptionsRef = collection(db, 'customers', uid, 'subscriptions')
@@ -131,6 +117,7 @@ import {
 	  )
 	  const activeSubsSnapshot = await getDocs(activeQuery)
 	  if (activeSubsSnapshot.empty) return false
+  
 	  const latestSub = activeSubsSnapshot.docs[0].data()
 	  const currentPeriodEndMs = latestSub.current_period_end.toMillis()
 	  return currentPeriodEndMs > Date.now()
@@ -140,9 +127,7 @@ import {
 	}
   }
   
-  /**
-   * ============= 订阅相关：创建checkout session =============
-   */
+  // ============= 创建 checkout session (Stripe) =============
   async function createCheckoutSession(
 	uid: string,
 	priceId: string,
@@ -165,51 +150,44 @@ import {
 	}
   }
   
-  /**
-   * ============= 订阅相关：侦听checkout session的实时更新(与subscribe.js逻辑相同) =============
-   */
+  // ============= 监听 checkout session 的实时更新 (对于stripe支付链接) =============
   function listenToCheckoutSession(docRef: any, onData: (data: any) => void) {
 	return onSnapshot(docRef, (snap: DocumentSnapshot) => onData(snap.data()))
   }
   
-  /**
-   * ============= 后台刷新用户数据(已有) =============
-   */
+  // ============= 后台：检查用户最新订阅信息并更新到storage =============
   async function checkPaymentStatus(userId: string): Promise<boolean> {
 	const paymentsRef = collection(db, 'customers', userId, 'subscriptions')
-	const q = query(
-	  paymentsRef,
-	  where('status', '==', 'active'),
-	  orderBy('current_period_end', 'desc'),
-	  limit(1)
-	)
+	const q = query(paymentsRef, where('status', '==', 'active'), orderBy('current_period_end', 'desc'), limit(1))
 	const snapshot = await getDocs(q)
 	if (snapshot.empty) return false
+  
 	const data = snapshot.docs[0].data()
 	const currentPeriodEndMs = data.current_period_end.toMillis()
 	return currentPeriodEndMs > Date.now()
   }
   
+  // ============= 刷新用户数据(按需拉取最新订阅状态) =============
   async function refreshUserData() {
 	const user = await getUser()
 	if (!user || !user.uid) {
 	  return
 	}
   
+	// 检查 Firestore 是否有有效订阅
 	const hasValidSubscription = await checkPaymentStatus(user.uid)
 	const updatedUser = {
 	  ...user,
 	  hasValidSubscription,
 	}
   
+	// 写回 chrome.storage.sync
 	await new Promise<void>((resolve) => {
 	  chrome.storage.sync.set({ user: updatedUser }, resolve)
 	})
   }
   
-  /**
-   * ============= 判断用户是否有效订阅或在试用期(已有) =============
-   */
+  // ============= 判断用户是否有效订阅或仍在试用期 =============
   async function isUserSubscriptionValid(user: any) {
 	if (!user) return false
 	if (user.hasValidSubscription) return true
@@ -225,9 +203,7 @@ import {
 	return now - user.creationTime < TRIAL_DURATION
   }
   
-  /**
-   * ============= 主动注入 content script(已有) =============
-   */
+  // ============= 注入 content script(捕捉页面内容) =============
   async function injectContentScript(tabId: number) {
 	try {
 	  await chrome.scripting.executeScript({
@@ -235,13 +211,11 @@ import {
 		files: ['content/index.js'],
 	  })
 	} catch (error) {
-	  // 忽略可能的重复注入
+	  // 忽略重复注入导致的报错
 	}
   }
   
-  /**
-   * ============= 与前端通信，获取页面内容(已有) =============
-   */
+  // ============= 与 content script 通信，获取题目文本 =============
   async function fetchPageContent(tabId: number) {
 	const response = await chrome.tabs.sendMessage(tabId, {
 	  action: 'getPageContent',
@@ -252,9 +226,7 @@ import {
 	return response.body
   }
   
-  /**
-   * ============= 设置答复语言提示(已有) =============
-   */
+  // ============= 根据语言枚举映射成可读提示(目前仅简单处理) =============
   function getLanguagePrompt(lang: string) {
 	const prompts: { [key: string]: string } = {
 	  en: 'English',
@@ -266,14 +238,13 @@ import {
 	return prompts[lang] || 'English'
   }
   
-  /**
-   * ============= 后台弹窗显示最终答案(已有) =============
-   */
+  // ============= 显示最终答案(用popup或新Tab打开) =============
   async function showAnswer(answer: string) {
 	const parsedContent = parseMarkdown(answer)
 	const html = generateResultHTML(parsedContent)
+  
 	try {
-	  // 优先以popup方式打开
+	  // 尝试以popup方式打开
 	  await chrome.windows.create({
 		url: `data:text/html,${encodeURIComponent(html)}`,
 		type: 'popup',
@@ -282,7 +253,7 @@ import {
 		focused: true,
 	  })
 	} catch {
-	  // 如果popup失败，就直接用新Tab打开
+	  // popup失败就用新Tab
 	  await chrome.tabs.create({
 		url: `data:text/html,${encodeURIComponent(html)}`,
 		active: true,
@@ -290,9 +261,7 @@ import {
 	}
   }
   
-  /**
-   * ============= 生成最终HTML(已有) =============
-   */
+  // ============= 生成答案HTML =============
   function generateResultHTML(parsedContent: string) {
 	return `
   <!DOCTYPE html>
@@ -450,52 +419,53 @@ import {
 	  </head>
 	  <body>
 		<div class="container">
-		  <!-- 后台已解析好的HTML -->
 		  <article class="markdown-body" id="content">${parsedContent}</article>
 		</div>
 	  </body>
-	</html>
-	`.trim()
+  </html>
+  `.trim()
   }
   
-  /**
-   * ============= 主体函数：查询解决方案 =============
-   */
+  // ============= 核心函数：获取AI解答(在点击「GetAnswer」或插件图标时触发) =============
   async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 	const tabId = typeof tabOrId === 'number' ? tabOrId : tabOrId.id!
   
 	try {
+	  // 1. 获取当前用户
 	  const user = await getUser()
 	  if (!user) {
 		await showErrorMessage(tabId, '请先登录后再使用。')
 		return
 	  }
-
+  
+	  // 2. 判断是否可用：已订阅 或者 在试用期
 	  const validSubscription = await isUserSubscriptionValid(user)
 	  if (!validSubscription) {
 		await showErrorMessage(tabId, 'Algo Ace试用已结束，请先订阅后再使用。')
 		return
 	  }
-
-	  const { lastQueryTime, lastContent, lastContentQueryTime } =
-		await chrome.storage.sync.get([
-		  'lastQueryTime',
-		  'lastContent',
-		  'lastContentQueryTime',
-		])
-
+  
+	  // 3. 防止用户在15秒内重复请求
+	  const { lastQueryTime, lastContent, lastContentQueryTime } = await chrome.storage.sync.get([
+		'lastQueryTime',
+		'lastContent',
+		'lastContentQueryTime',
+	  ])
 	  const now = Date.now()
-
+  
 	  if (lastQueryTime && now - lastQueryTime < 15000) {
 		await showErrorMessage(tabId, 'Algo Ace：请勿在15秒内重复提交相同请求。')
 		return
 	  }
-
+  
+	  // 4. 获取当前 AI 配置
 	  const { model, language, context, programmingLanguage } = await getApiConfig()
-
+  
+	  // 5. 注入 content script，获取页面内容
 	  await injectContentScript(tabId)
 	  const pageContent = await fetchPageContent(tabId)
-
+  
+	  // 6. 防止在2分钟内重复分析同一份内容
 	  if (
 		lastContent === pageContent &&
 		lastContentQueryTime &&
@@ -504,17 +474,19 @@ import {
 		await showErrorMessage(tabId, 'Algo Ace：请勿在短时间内提交相同内容。')
 		return
 	  }
-
+  
+	  // 7. 记录新的请求时间 & 内容
 	  await chrome.storage.sync.set({
 		lastQueryTime: now,
 		lastContent: pageContent,
 		lastContentQueryTime: now,
 	  })
-
+  
+	  // 8. 准备向 OpenAI 发送的 Prompt
 	  const DEFAULT_PROMPT_TEMPLATE = `
 	  请分析以下算法题目，并给出详细解答：
 	  {content}
-
+  
 	  要求：
 	  1. 使用{language}, 使用markdown格式回答
 	  2. 使用{programmingLanguage}语言, 并保持{programmingLanguage}的代码风格
@@ -525,24 +497,26 @@ import {
 	  7. 补充其他解法（如果有）
 	  {context}
 	  `.trim()
-
+  
 	  const prompt = DEFAULT_PROMPT_TEMPLATE
 		.replace('{content}', pageContent)
 		.replace('{language}', getLanguagePrompt(language))
 		.replace('{context}', context || '')
 		.replace('{programmingLanguage}', programmingLanguage)
-
+  
+	  // 9. 调用后端云函数
 	  const answer = await callOpenAIThroughBackend(prompt, model, tabId)
+  
+	  // 10. 显示答案
 	  await showAnswer(answer)
 	} catch (error: any) {
 	  await showErrorMessage(tabId, `处理请求时出错: ${error.message || '未知错误'}`)
 	}
   }
   
-  /**
-   * ============= 后台消息监听(包含订阅逻辑) =============
-   */
+  // ============= 后台消息监听: 处理前端发来的各种action =============
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+	// 1. 点击「GetAnswer」
 	if (request.action === 'getAnswer' && request.tabId) {
 	  querySolution(request.tabId)
 		.then(() => sendResponse({ success: true }))
@@ -550,10 +524,10 @@ import {
 		  console.error(error)
 		  sendResponse({ error: error.message })
 		})
-	  return true
+	  return true // 异步
 	}
   
-	// 打开登录弹窗
+	// 2. 登录弹窗
 	if (request.action === 'login') {
 	  chrome.windows.create(
 		{
@@ -567,22 +541,22 @@ import {
 	  return true
 	}
   
-	// 订阅逻辑：移除subscribe.html后，直接在这里处理
+	// 3. 订阅流程：创建 checkout session 并打开Stripe支付页面
 	if (request.action === 'subscribe') {
 	  ;(async () => {
 		try {
-		  // 1. 获取当前用户
+		  // 3.1 获取当前用户
 		  const user = await getUser()
 		  if (!user || !user.uid) {
 			sendResponse({ success: false, error: '请先登录再订阅' })
 			return
 		  }
-		  // 2. 检查是否已有有效订阅
+		  // 3.2 检查是否已有有效订阅
 		  if (await hasActiveSubscription(user.uid, request.tabId)) {
 			sendResponse({ success: false, error: '已拥有有效订阅' })
 			return
 		  }
-		  // 3. 从Firestore获取priceId
+		  // 3.3 从 Firestore 获取 priceId
 		  const configDocRef = doc(db, 'config', 'stripe')
 		  const configSnap = await getDoc(configDocRef)
 		  if (!configSnap.exists()) {
@@ -591,17 +565,22 @@ import {
 		  }
 		  const PRICE_ID = configSnap.data().priceId_test
   
-		  // 4. 创建checkout session
-		  const docRef = await createCheckoutSession(user.uid, PRICE_ID, user.email, request.tabId)
+		  // 3.4 创建 checkout session
+		  const docRef = await createCheckoutSession(
+			user.uid,
+			PRICE_ID,
+			user.email,
+			request.tabId
+		  )
   
-		  // 5. 监听checkout session, 获取stripe支付链接
+		  // 3.5 监听 checkout session, 获取 Stripe 支付链接
 		  const unsubscribe = listenToCheckoutSession(docRef, (data) => {
 			if (data?.error) {
 			  unsubscribe()
 			  sendResponse({ success: false, error: data.error.message })
 			} else if (data?.url) {
 			  unsubscribe()
-			  // 后台直接打开Stripe支付页面(新建窗口or标签)
+			  // 后台直接弹出支付页
 			  chrome.windows.create(
 				{
 				  url: data.url,
@@ -623,7 +602,7 @@ import {
 	  return true
 	}
   
-	// 刷新用户数据(已有)
+	// 4. 刷新用户数据（按需拉取订阅状态）
 	if (request.action === 'refreshUser') {
 	  refreshUserData()
 		.then(() => sendResponse({ success: true }))
@@ -634,20 +613,43 @@ import {
 	}
   })
   
-  /**
-   * 监听图标点击事件，默认触发获取解答
-   */
+  // ============= 监听插件图标点击事件(默认获取解答) =============
   chrome.action.onClicked.addListener(querySolution)
   
-  /**
-   * 监听快捷键
-   */
+  // ============= 监听快捷键 =============
   chrome.commands.onCommand.addListener(async (command) => {
 	const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
 	if (!tab) return
+  
 	if (command === '_execute_action') {
+	  // 按下Chrome自带的 action 快捷键，打开Popup
 	  await chrome.action.openPopup()
 	} else if (command === 'get_answer') {
-	  await querySolution(tab)
+	  // =========== 重点改动：先刷新，再判断，再决定是否调用querySolution ============
+	  try {
+		// 1. 先刷新订阅数据
+		await refreshUserData()
+  
+		// 2. 再次获取最新user
+		const user = await getUser()
+		if (!user || !user.uid) {
+		  // 如果此时没有登录，直接提示
+		  await showErrorMessage(tab.id!, '请先登录后再使用。')
+		  return
+		}
+		// 3. 判断是否仍然可以使用
+		const validSubscription = await isUserSubscriptionValid(user)
+		if (!validSubscription) {
+		  await showErrorMessage(tab.id!, '订阅已过期或试用结束，请先订阅后再使用。')
+		  return
+		}
+  
+		// 4. 最终可用，调用 querySolution
+		showErrorMessage(tab.id!, '获取解答中...')
+		await querySolution(tab)
+	  } catch (err: any) {
+		console.error(err)
+		await showErrorMessage(tab.id!, '无法获取订阅状态，请重试或检查网络。')
+	  }
 	}
   })
