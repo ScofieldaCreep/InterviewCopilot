@@ -38,7 +38,6 @@ export default defineConfig({
 			input: {
 				background: resolve(srcDir, 'background/index.ts'),
 				login: resolve(rootDir, 'login.html'),
-				subscribe: resolve(rootDir, 'subscribe.html')
 			},
 			output: {
 				format: 'esm',
