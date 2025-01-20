@@ -1,5 +1,5 @@
 import { watchPublicPlugin, watchRebuildPlugin } from '@extension/hmr'
-import { isDev, isProduction, watchOption } from '@extension/vite-config'
+import { isDev, watchOption } from '@extension/vite-config'
 import libAssetsPlugin from '@laynezh/vite-plugin-lib-assets'
 import { resolve } from 'node:path'
 import { defineConfig, type PluginOption } from 'vite'
@@ -30,8 +30,14 @@ export default defineConfig({
 		outDir,
 		emptyOutDir: false,
 		sourcemap: isDev,
-		minify: isProduction,
-		reportCompressedSize: isProduction,
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true,
+				drop_debugger: true
+			}
+		},
+		reportCompressedSize: true,
 		watch: watchOption,
 		assetsDir: '.',
 		rollupOptions: {

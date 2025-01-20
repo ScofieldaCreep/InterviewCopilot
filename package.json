@@ -1,6 +1,6 @@
 {
 	"name": "algo-ace",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "an interview copilot named algo-ace : )",
 	"type": "module",
 	"scripts": {

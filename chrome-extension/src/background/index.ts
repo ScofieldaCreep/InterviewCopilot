@@ -94,7 +94,7 @@ import {
 	  const response = await getOpenAIAnswer({ prompt, model })
 	  return response.data.answer
 	} catch (error: any) {
-	  await showErrorMessage(tabId, `AI 响应错误: ${error.message || '未知错误'}`)
+	  await showErrorMessage(tabId, `AI Response Error: ${error.message || 'Unknown error'}`)
 	  throw error
 	}
   }
@@ -122,7 +122,7 @@ import {
 	  const currentPeriodEndMs = latestSub.current_period_end.toMillis()
 	  return currentPeriodEndMs > Date.now()
 	} catch (error: any) {
-	  await showErrorMessage(tabId, `订阅检查失败: ${error.message || '未知错误'}`)
+	  await showErrorMessage(tabId, `Subscription check failed: ${error.message || 'Unknown error'}`)
 	  throw error
 	}
   }
@@ -145,7 +145,7 @@ import {
 	  }
 	  return await addDoc(checkoutSessionRef, sessionData)
 	} catch (error: any) {
-	  await showErrorMessage(tabId, `创建支付会话失败: ${error.message || '未知错误'}`)
+	  await showErrorMessage(tabId, `Failed to create payment session: ${error.message || 'Unknown error'}`)
 	  throw error
 	}
   }
@@ -434,14 +434,14 @@ import {
 	  // 1. 获取当前用户
 	  const user = await getUser()
 	  if (!user) {
-		await showErrorMessage(tabId, '请先登录后再使用。')
+		await showErrorMessage(tabId, 'Please login first.')
 		return
 	  }
   
 	  // 2. 判断是否可用：已订阅 或者 在试用期
 	  const validSubscription = await isUserSubscriptionValid(user)
 	  if (!validSubscription) {
-		await showErrorMessage(tabId, 'Algo Ace试用已结束，请先订阅后再使用。')
+		await showErrorMessage(tabId, 'Trial period has ended. Please subscribe to continue.')
 		return
 	  }
   
@@ -454,7 +454,7 @@ import {
 	  const now = Date.now()
   
 	  if (lastQueryTime && now - lastQueryTime < 15000) {
-		await showErrorMessage(tabId, 'Algo Ace：请勿在15秒内重复提交相同请求。')
+		await showErrorMessage(tabId, 'Please wait 15 seconds between requests.')
 		return
 	  }
   
@@ -471,7 +471,7 @@ import {
 		lastContentQueryTime &&
 		now - lastContentQueryTime < 120000
 	  ) {
-		await showErrorMessage(tabId, 'Algo Ace：请勿在短时间内提交相同内容。')
+		await showErrorMessage(tabId, 'Please wait before submitting the same content again.')
 		return
 	  }
   
@@ -484,17 +484,17 @@ import {
   
 	  // 8. 准备向 OpenAI 发送的 Prompt
 	  const DEFAULT_PROMPT_TEMPLATE = `
-	  请分析以下算法题目，并给出详细解答：
+	   Please analyze the following algorithm problem and provide a detailed solution:
 	  {content}
   
-	  要求：
-	  1. 使用{language}, 使用markdown格式回答
-	  2. 使用{programmingLanguage}语言, 并保持{programmingLanguage}的代码风格
-	  3. 分析题目关键点和考察要点
-	  4. 给出最优解法的思路和推导过程
-	  5. 提供完整的代码实现（包含必要的注释）
-	  6. 分析时间和空间复杂度
-	  7. 补充其他解法（如果有）
+	   Requirements:
+	   1. Use {language}, answer in markdown format
+	   2. Use {programmingLanguage} language, maintain {programmingLanguage} code style
+	   3. Analyze key points and test focus
+	   4. Provide optimal solution approach and derivation process
+	   5. Provide complete code implementation (with necessary comments)
+	   6. Analyze time and space complexity
+	   7. Add alternative solutions (if any)
 	  {context}
 	  `.trim()
   
@@ -510,7 +510,7 @@ import {
 	  // 10. 显示答案
 	  await showAnswer(answer)
 	} catch (error: any) {
-	  await showErrorMessage(tabId, `处理请求时出错: ${error.message || '未知错误'}`)
+	  await showErrorMessage(tabId, `Request processing error: ${error.message || 'Unknown error'}`)
 	}
   }
   
@@ -548,22 +548,22 @@ import {
 		  // 3.1 获取当前用户
 		  const user = await getUser()
 		  if (!user || !user.uid) {
-			sendResponse({ success: false, error: '请先登录再订阅' })
+			sendResponse({ success: false, error: 'Please login before subscribing' })
 			return
 		  }
 		  // 3.2 检查是否已有有效订阅
 		  if (await hasActiveSubscription(user.uid, request.tabId)) {
-			sendResponse({ success: false, error: '已拥有有效订阅' })
+			sendResponse({ success: false, error: 'Active subscription already exists' })
 			return
 		  }
 		  // 3.3 从 Firestore 获取 priceId
 		  const configDocRef = doc(db, 'config', 'stripe')
 		  const configSnap = await getDoc(configDocRef)
 		  if (!configSnap.exists()) {
-			sendResponse({ success: false, error: '未找到Stripe配置' })
+			sendResponse({ success: false, error: 'Stripe configuration not found' })
 			return
 		  }
-		  const PRICE_ID = configSnap.data().priceId_test
+		  const PRICE_ID = configSnap.data().priceId_production
   
 		  // 3.4 创建 checkout session
 		  const docRef = await createCheckoutSession(
@@ -634,22 +634,22 @@ import {
 		const user = await getUser()
 		if (!user || !user.uid) {
 		  // 如果此时没有登录，直接提示
-		  await showErrorMessage(tab.id!, '请先登录后再使用。')
+		  await showErrorMessage(tab.id!, 'Please login first.')
 		  return
 		}
 		// 3. 判断是否仍然可以使用
 		const validSubscription = await isUserSubscriptionValid(user)
 		if (!validSubscription) {
-		  await showErrorMessage(tab.id!, '订阅已过期或试用结束，请先订阅后再使用。')
+		  await showErrorMessage(tab.id!, 'Trial period has ended. Please subscribe to continue.')
 		  return
 		}
   
 		// 4. 最终可用，调用 querySolution
-		showErrorMessage(tab.id!, '获取解答中...')
+		await showErrorMessage(tab.id!, 'Getting solution...')
 		await querySolution(tab)
 	  } catch (err: any) {
 		console.error(err)
-		await showErrorMessage(tab.id!, '无法获取订阅状态，请重试或检查网络。')
+		await showErrorMessage(tab.id!, 'Unable to check subscription status. Please retry or check network.')
 	  }
 	}
   })
