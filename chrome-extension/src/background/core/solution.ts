@@ -46,11 +46,7 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
     const pageContent = await fetchPageContent(tabId);
 
     // 6. 防止在2分钟内重复分析同一份内容
-    if (
-      lastContent === pageContent &&
-      lastContentQueryTime &&
-      now - lastContentQueryTime < 120000
-    ) {
+    if (lastContent === pageContent && lastContentQueryTime && now - lastContentQueryTime < 120000) {
       await showErrorMessage(tabId, 'Please wait before submitting the same content again.');
       return;
     }
@@ -78,8 +74,7 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
     {context}
     `.trim();
 
-    const prompt = DEFAULT_PROMPT_TEMPLATE
-      .replace('{content}', pageContent)
+    const prompt = DEFAULT_PROMPT_TEMPLATE.replace('{content}', pageContent)
       .replace('{language}', getLanguagePrompt(language))
       .replace('{context}', context || '')
       .replace('{programmingLanguage}', programmingLanguage);
@@ -92,4 +87,4 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
   } catch (error: any) {
     await showErrorMessage(tabId, `Request processing error: ${error.message || 'Unknown error'}`);
   }
-} 
+}

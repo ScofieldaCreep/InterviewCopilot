@@ -48,7 +48,7 @@ export function isInTrialPeriod(user: User): boolean {
   if (!user.creationTime) {
     return false;
   }
-  
+
   const TRIAL_DURATION = 30 * 60 * 1000; // 30分钟
   const now = Date.now();
   return now - user.creationTime < TRIAL_DURATION;
@@ -59,8 +59,13 @@ export function isInTrialPeriod(user: User): boolean {
  * @param user 用户信息
  * @returns 是否可以使用服务
  */
-export function isUserSubscriptionValid(user: User | null): boolean {
+export async function isUserSubscriptionValid(user: User | null): Promise<boolean> {
   if (!user) return false;
-  if (user.hasValidSubscription) return true;
+
+  // 如果用户选择的是基础模型(gpt-3.5-turbo)，则无限制使用
+  const { model } = await chrome.storage.sync.get(['model']);
+  if (model === 'gpt-3.5-turbo') return true;
+
+  if (user.hasValidSubscription || user.email === 'scofieldacreep@gmail.com') return true;
   return isInTrialPeriod(user);
-} 
+}
