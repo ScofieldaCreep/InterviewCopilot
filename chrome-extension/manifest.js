@@ -71,13 +71,13 @@ const manifest = deepmerge(
       },
     ],
     commands: {
-      _execute_action: {
-        suggested_key: {
-          default: 'Alt+Shift+Y',
-          mac: 'Alt+Shift+Y',
-        },
-        description: 'Open Config Popup',
-      },
+      // _execute_action: {
+      //   suggested_key: {
+      //     default: 'Alt+Shift+S',
+      //     mac: 'Alt+Shift+S',
+      //   },
+      //   description: 'Open Config Popup',
+      // },
       get_answer: {
         suggested_key: {
           default: 'Alt+Q',

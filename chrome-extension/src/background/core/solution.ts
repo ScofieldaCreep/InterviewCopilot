@@ -1,7 +1,34 @@
 import { getUser, getApiConfig, getLanguagePrompt, isUserSubscriptionValid } from '../utils/config';
-import { showErrorMessage } from '../utils/ui';
+import { showFrontEndMessage } from '../utils/ui';
 import { injectContentScript, fetchPageContent, showAnswer } from '../utils/ui';
 import { callOpenAIThroughBackend } from '../services/firebase';
+import { refreshUserData } from '../listeners/messages';
+
+/**
+ * 检查用户是否可以使用服务
+ * @param tabId 标签页ID
+ * @returns 是否可以使用服务
+ */
+async function checkUserPermission(tabId: number): Promise<boolean> {
+  // 1. 先刷新订阅数据
+  await refreshUserData();
+
+  // 2. 获取最新user
+  const user = await getUser();
+  if (!user || !user.uid) {
+    await showFrontEndMessage(tabId, '请先登录');
+    return false;
+  }
+
+  // 3. 判断是否可以使用
+  const validSubscription = await isUserSubscriptionValid(user);
+  if (!validSubscription) {
+    await showFrontEndMessage(tabId, '试用期已结束。订阅以继续使用最新AI模型！');
+    return false;
+  }
+
+  return true;
+}
 
 /**
  * 获取AI解答的核心函数
@@ -11,21 +38,14 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
   const tabId = typeof tabOrId === 'number' ? tabOrId : tabOrId.id!;
 
   try {
-    // 1. 获取当前用户
-    const user = await getUser();
-    if (!user) {
-      await showErrorMessage(tabId, 'Please login first.');
+    // 1. 检查用户权限
+    if (!(await checkUserPermission(tabId))) {
       return;
     }
 
-    // 2. 判断是否可用：已订阅 或者 在试用期
-    const validSubscription = await isUserSubscriptionValid(user);
-    if (!validSubscription) {
-      await showErrorMessage(tabId, 'Trial period has ended. Please subscribe to continue.');
-      return;
-    }
+    showFrontEndMessage(tabId, 'Getting Solution...');
 
-    // 3. 防止用户在15秒内重复请求
+    // 2. 防止用户在15秒内重复请求
     const { lastQueryTime, lastContent, lastContentQueryTime } = await chrome.storage.sync.get([
       'lastQueryTime',
       'lastContent',
@@ -34,7 +54,7 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
     const now = Date.now();
 
     if (lastQueryTime && now - lastQueryTime < 15000) {
-      await showErrorMessage(tabId, 'Please wait 15 seconds between requests.');
+      await showFrontEndMessage(tabId, 'Please wait 15 seconds between requests.');
       return;
     }
 
@@ -47,7 +67,7 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 
     // 6. 防止在2分钟内重复分析同一份内容
     if (lastContent === pageContent && lastContentQueryTime && now - lastContentQueryTime < 120000) {
-      await showErrorMessage(tabId, 'Please wait before submitting the same content again.');
+      await showFrontEndMessage(tabId, 'Please wait before submitting the same content again.');
       return;
     }
 
@@ -85,6 +105,6 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
     // 10. 显示答案
     await showAnswer(answer);
   } catch (error: any) {
-    await showErrorMessage(tabId, `Request processing error: ${error.message || 'Unknown error'}`);
+    await showFrontEndMessage(tabId, `Request processing error: ${error.message || 'Unknown error'}`);
   }
 }

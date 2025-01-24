@@ -64,7 +64,8 @@ export async function isUserSubscriptionValid(user: User | null): Promise<boolea
 
   // 如果用户选择的是基础模型(gpt-3.5-turbo)，则无限制使用
   const { model } = await chrome.storage.sync.get(['model']);
-  if (model === 'gpt-3.5-turbo') return true;
+  console.log('model', model);
+  if (model === 'gpt-4o-mini') return true;
 
   if (user.hasValidSubscription || user.email === 'scofieldacreep@gmail.com') return true;
   return isInTrialPeriod(user);

@@ -1,6 +1,6 @@
 import { querySolution } from '../core/solution';
 import { getUser } from '../utils/config';
-import { showErrorMessage } from '../utils/ui';
+import { showFrontEndMessage } from '../utils/ui';
 import {
   hasActiveSubscription,
   getStripePriceId,
@@ -38,14 +38,10 @@ export function initializeListeners(): void {
     if (request.action === 'getAnswer' && request.tabId) {
       (async () => {
         try {
-          // 触发显示提示，但不等待
-          showErrorMessage(request.tabId, 'Getting solution...');
-          // 执行获取解答
           await querySolution(request.tabId);
           sendResponse({ success: true });
         } catch (error: any) {
           console.error(error);
-          await showErrorMessage(request.tabId, error.message || 'Unknown error');
           sendResponse({ error: error.message });
         }
       })();

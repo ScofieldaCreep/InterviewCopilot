@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './Popup.css';
 
 interface User {
@@ -30,20 +30,63 @@ const Button: React.FC<
   );
 };
 
-const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { options: Option[] }> = ({
-  options,
-  ...props
-}) => (
-  <select {...props}>
-    {options.map(option => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
-);
+const CustomSelect: React.FC<{
+  options: Option[];
+  value: string;
+  onChange: (value: string) => void;
+  id?: string;
+}> = ({ options, value, onChange, id }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const selectedOption = options.find(opt => opt.value === value);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-const ConfigItem: React.FC<{ label: string }> = ({ label, children }) => (
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setIsSelecting(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+    setIsSelecting(true);
+  };
+
+  const handleOptionClick = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+    setIsSelecting(false);
+  };
+
+  return (
+    <div className="custom-select" ref={dropdownRef}>
+      <div
+        className={`select-selected ${isSelecting ? 'selecting' : ''}`}
+        onClick={handleSelectClick}
+        dangerouslySetInnerHTML={{ __html: selectedOption?.label || '' }}></div>
+      {isOpen && (
+        <div className="select-options">
+          {options.map(option => (
+            <div
+              key={option.value}
+              className={`select-option ${option.value === value ? 'selected' : ''}`}
+              onClick={() => handleOptionClick(option.value)}
+              dangerouslySetInnerHTML={{ __html: option.label }}></div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ConfigItem: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="config-item">
     <label>{label}</label>
     {children}
@@ -51,35 +94,98 @@ const ConfigItem: React.FC<{ label: string }> = ({ label, children }) => (
 );
 
 const UserInfo: React.FC<{ user: User; onLogout: () => void }> = ({ user, onLogout }) => (
-  <div className="user-card compact">
-    <img src={user.photo || 'default-avatar.png'} alt={user.name} className="user-avatar small" />
+  <div className="user-card">
+    <img src={user.photo || 'default-avatar.png'} alt={user.name} className="user-avatar" />
     <div className="user-details">
-      <h2 className="user-name">{user.name}</h2>
+      <div className="user-name">
+        {user.name}
+        <span className="user-status">{user.hasValidSubscription ? 'Pro' : 'Trial'}</span>
+      </div>
       <p className="user-email">{user.email}</p>
     </div>
-    <Button variant="secondary" onClick={onLogout} className="logout-button compact">
+    <Button variant="secondary" onClick={onLogout} className="logout-button">
       Logout
     </Button>
   </div>
 );
 
-const ShortcutHint: React.FC = () => (
-  <div className="shortcut-hint">
-    <div className="shortcut-item">
-      <span>Open Settings:</span>
-      <span className="shortcut-key">Alt + Shift + Y</span>
+// const ShortcutHint: React.FC = () => (
+//   <div className="shortcut-hint">
+//     <div className="shortcut-item">
+//       <span>Open Settings:</span>
+//       <span className="shortcut-key">Alt + Shift + Y</span>
+//     </div>
+//     <div className="shortcut-item">
+//       <span>Quick Solution:</span>
+//       <span className="shortcut-key">Alt + Q</span>
+//     </div>
+//   </div>
+// );
+
+const NavigationHint: React.FC = () => (
+  <div className="navigation-hint">
+    <div className="nav-title">⚡️ Pro Tips</div>
+    <div className="shortcut-container">
+      <div className="shortcut-item">
+        <div className="shortcut-info">
+          <span className="shortcut-icon">⌥</span>
+          <span className="shortcut-plus">+</span>
+          <span className="shortcut-icon">Q</span>
+        </div>
+        <div className="shortcut-description">
+          <span className="shortcut-label">Stealth Shortcut</span>
+          <span className="shortcut-detail">Silently peek solutions, in one hidden click</span>
+        </div>
+      </div>
     </div>
-    <div className="shortcut-item">
-      <span>Quick Solution:</span>
-      <span className="shortcut-key">Alt + Q</span>
+
+    <div className="shortcut-tip">
+      <div className="tip-content">
+        <span className="tip-icon">💡</span>
+        <span className="shortcut-label">
+          Solutions will pop up as an unactive window next to current Chrome page without disturbing your active tab.
+        </span>
+      </div>
+      <div className="contact-info">
+        <span className="contact-icon">💌</span>
+        <span className="contact-text">Welcome Suggestions: chizhang2048@gmail.com</span>
+      </div>
     </div>
   </div>
 );
 
-const Header: React.FC = () => (
-  <header className="header">
-    <h1 className="title">Interview Copilot</h1>
-    <p className="subtitle">AI-powered algorithm solution assistant</p>
+const Header: React.FC<{ isLoggedIn?: boolean }> = ({ isLoggedIn }) => (
+  <header className={`header ${isLoggedIn ? 'header-minimal' : ''}`}>
+    {isLoggedIn ? (
+      // 登录后显示简洁版本
+      <div className="logo-container-minimal">
+        <span className="logo-icon-small">⚡️</span>
+        <h1 className="title-small">Interview Copilot</h1>
+      </div>
+    ) : (
+      // 登录前显示完整版本
+      <>
+        <div className="logo-container">
+          <span className="logo-icon">⚡️</span>
+          <h1 className="title">Interview Copilot</h1>
+        </div>
+        <p className="subtitle">Your AI Interview Success Partner</p>
+        <div className="header-features">
+          <div className="feature-badge">
+            <span className="badge-icon">🎯</span>
+            <span className="badge-text">100% Undetectable</span>
+          </div>
+          <div className="feature-badge">
+            <span className="badge-icon">🚀</span>
+            <span className="badge-text">Instant Solutions</span>
+          </div>
+          <div className="feature-badge">
+            <span className="badge-icon">🔒</span>
+            <span className="badge-text">Privacy First</span>
+          </div>
+        </div>
+      </>
+    )}
   </header>
 );
 
@@ -91,6 +197,50 @@ const LoginSection: React.FC<{ onLogin: () => void }> = ({ onLogin }) => (
     </Button>
   </div>
 );
+
+const ModelSelector: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}> = ({ value, onChange, disabled }) => {
+  const models = [
+    {
+      value: 'gpt-4o-mini',
+      label: 'Fast',
+      description: 'GPT-4o',
+    },
+    {
+      value: 'gpt-4o',
+      label: 'Balanced',
+      description: 'o1-mini',
+      pro: true,
+    },
+    {
+      value: 'o1-mini',
+      label: 'Accurate',
+      description: 'o1',
+      pro: true,
+    },
+  ];
+
+  return (
+    <div className="model-selector">
+      {models.map(model => (
+        <button
+          key={model.value}
+          className={`model-button ${value === model.value ? 'active' : ''} ${model.pro && disabled ? 'pro' : ''}`}
+          onClick={() => onChange(model.value)}
+          disabled={disabled && model.pro}>
+          <div className="model-button-content">
+            <span className="model-label">{model.label}</span>
+            <span className="model-description">{model.description}</span>
+            {model.pro && disabled && <span className="pro-badge">Pro</span>}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+};
 
 /** ================== 合并后的统一用户面板组件 ================== **/
 const UserDashboard: React.FC<{
@@ -131,95 +281,174 @@ const UserDashboard: React.FC<{
     <>
       <UserInfo user={user} onLogout={onLogout} />
 
-      <ConfigItem label="Model">
-        <Select
-          id="model"
-          value={model}
-          onChange={e => setModel(e.target.value)}
-          options={[
-            { value: 'gpt-4o-mini', label: 'gpt-4o' },
-            { value: 'gpt-4o', label: 'o1-mini' },
-            { value: 'o1-mini', label: 'o1' },
-          ]}
-        />
-      </ConfigItem>
+      <div className="settings-grid">
+        <ConfigItem label="Model">
+          <ModelSelector value={model} onChange={setModel} disabled={!user.hasValidSubscription && !inTrial} />
+          {!user.hasValidSubscription && !inTrial && (
+            <div className="model-upgrade-hint">
+              <span className="hint-icon">✨</span>
+              <span className="hint-text">3x faster & more accurate solutions with Pro models</span>
+            </div>
+          )}
+        </ConfigItem>
 
-      <ConfigItem label="Response Language">
-        <Select
-          id="language"
-          value={language}
-          onChange={e => setLanguage(e.target.value)}
-          options={[
-            { value: 'en', label: 'English' },
-            { value: 'zh', label: 'Chinese (中文)' },
-            { value: 'ja', label: 'Japanese (日本語)' },
-            { value: 'es', label: 'Spanish (Español)' },
-            { value: 'hi', label: 'Hindi (हिन्दी)' },
-          ]}
-        />
-      </ConfigItem>
+        <div className="settings-row">
+          <ConfigItem label="Language">
+            <CustomSelect
+              id="language"
+              value={language}
+              onChange={setLanguage}
+              options={[
+                { value: 'en', label: '🇺🇸 English' },
+                { value: 'zh', label: '🇨🇳 中文' },
+                { value: 'ja', label: '🇯🇵 日本語' },
+                { value: 'es', label: '🇪🇸 Español' },
+                { value: 'hi', label: '🇮🇳 हिन्दी' },
+              ]}
+            />
+          </ConfigItem>
 
-      <ConfigItem label="Programming Language">
-        <Select
-          id="programmingLanguage"
-          value={programmingLanguage}
-          onChange={e => setProgrammingLanguage(e.target.value)}
-          options={[
-            { value: 'python', label: 'Python' },
-            { value: 'java', label: 'Java' },
-            { value: 'cpp', label: 'C++' },
-            { value: 'js', label: 'JavaScript' },
-            { value: 'go', label: 'Go' },
-            { value: 'rust', label: 'Rust' },
-            { value: 'c', label: 'C' },
-            { value: 'kotlin', label: 'Kotlin' },
-            { value: 'swift', label: 'Swift' },
-            { value: 'typescript', label: 'TypeScript' },
-          ]}
-        />
-      </ConfigItem>
+          <ConfigItem label="Code">
+            <CustomSelect
+              id="programmingLanguage"
+              value={programmingLanguage}
+              onChange={setProgrammingLanguage}
+              options={[
+                {
+                  value: 'python',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Python',
+                },
+                {
+                  value: 'java',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Java',
+                },
+                {
+                  value: 'cpp',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/cplusplus/cplusplus-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> C++',
+                },
+                {
+                  value: 'js',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> JavaScript',
+                },
+                {
+                  value: 'go',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/go/go-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Go',
+                },
+                {
+                  value: 'rust',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/rust-lang/rust-artwork/master/logo/rust-logo-64x64.png" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Rust',
+                },
+                {
+                  value: 'c',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/c/c-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> C',
+                },
+                {
+                  value: 'kotlin',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/kotlin/kotlin-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Kotlin',
+                },
+                {
+                  value: 'swift',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/swift/swift-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Swift',
+                },
+                {
+                  value: 'typescript',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> TypeScript',
+                },
+              ]}
+            />
+          </ConfigItem>
+        </div>
 
-      <ConfigItem label="Custom Prompt (Optional)">
-        <textarea
-          id="context"
-          rows={3}
-          placeholder="Add custom instructions to the AI..."
-          value={context}
-          onChange={e => setContext(e.target.value)}
-        />
-      </ConfigItem>
+        <ConfigItem label="Custom Instructions (Optional)">
+          <textarea
+            id="context"
+            rows={2}
+            placeholder="Add specific requirements or preferences..."
+            value={context}
+            onChange={e => setContext(e.target.value)}
+          />
+        </ConfigItem>
+      </div>
+
+      <style>
+        {`
+          select option[value="gpt-4o"],
+          select option[value="o1-mini"] {
+            color: ${!user.hasValidSubscription && !inTrial ? '#666' : 'inherit'};
+          }
+        `}
+      </style>
 
       {user.hasValidSubscription ? (
-        // 已订阅用户
-        <>
-          <Button variant="secondary" onClick={onGetSolution} className="full-width-button">
-            Get Solution
-          </Button>
-          <ShortcutHint />
-        </>
-      ) : inTrial ? (
-        // 未订阅且处于试用期内
-        <div className="trial-section">
-          <p>Your free trial is ongoing. Remaining time: {trialTimeLeft}</p>
-          <Button variant="secondary" onClick={onGetSolution} className="full-width-button">
-            Get Solution
-          </Button>
-          <Button variant="primary" onClick={onSubscribe} className="full-width-button">
-            Subscribe Now
-          </Button>
-          <Button variant="secondary" onClick={onLogout} className="full-width-button">
-            Logout
+        // Premium user
+        <div className="action-section">
+          <Button variant="primary" onClick={onGetSolution} className="solution-button">
+            <span className="button-content">
+              <span>Get Solution</span>
+            </span>
           </Button>
         </div>
       ) : (
-        // 未订阅且试用期已结束
-        <div className="expired-section">
-          <p>Your free trial has ended. Subscribe to enjoy unlimited interview buff.</p>
-          <Button variant="primary" onClick={onSubscribe} className="full-width-button">
-            Subscribe Now
-          </Button>
+        // Free or trial user
+        <div className="trial-section">
+          {trialTimeLeft ? (
+            <div className="trial-status">
+              <div className="timer-display">
+                <div className="timer-label">Trial Expires In:</div>
+                <div className="timer-value">{trialTimeLeft}</div>
+              </div>
+              <div className="trial-message">
+                <span className="highlight">Premium Features Unlocked</span>
+                <span className="sub-text">Using advanced AI models</span>
+              </div>
+            </div>
+          ) : (
+            <div className="upgrade-prompt">
+              <div className="prompt-badge">Limited Time Offer</div>
+              <h3>Ready to Secure Your Offer?</h3>
+              <div className="benefits">
+                <div className="benefit-item">
+                  <span className="check">✓</span>
+                  <span>Use the best coding model: OpenAI O1</span>
+                </div>
+                <div className="benefit-item">
+                  <span className="check">✓</span>
+                  <span>Get unlimited solutions</span>
+                </div>
+                <div className="benefit-item">
+                  <span className="check">✓</span>
+                  <span>And run out of the algorithm nightmare</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="action-buttons">
+            <Button variant="secondary" onClick={onGetSolution} className="solution-button">
+              <span className="button-content">
+                <span>Get Solution</span>
+              </span>
+            </Button>
+            <Button variant="primary" onClick={onSubscribe} className="upgrade-button">
+              <span className="button-content">
+                <span>Upgrade Now</span>
+                <span className="discount-badge">Save 20%</span>
+              </span>
+            </Button>
+          </div>
         </div>
       )}
+      <NavigationHint />
     </>
   );
 };
@@ -399,7 +628,7 @@ const Popup: React.FC = () => {
 
   return (
     <div className="popup-container">
-      <Header />
+      <Header isLoggedIn={!!user} />
       {content}
     </div>
   );

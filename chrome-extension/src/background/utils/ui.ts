@@ -5,7 +5,7 @@ import { parseMarkdown, generateResultHTML } from './markdown';
  * @param tabId 标签页ID
  * @param message 错误信息
  */
-export async function showErrorMessage(tabId: number, message: string): Promise<void> {
+export async function showFrontEndMessage(tabId: number, message: string): Promise<void> {
   await chrome.scripting.executeScript({
     target: { tabId },
     func: (errorMsg: string) => {
@@ -37,7 +37,7 @@ export async function showErrorMessage(tabId: number, message: string): Promise<
 
       setTimeout(() => div.remove(), 6000);
     },
-    args: [message],
+    args: ['AlgoAce: ' + message],
   });
 }
 

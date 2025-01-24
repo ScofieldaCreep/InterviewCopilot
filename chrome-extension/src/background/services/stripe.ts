@@ -1,7 +1,7 @@
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../firebase-init.js';
 import { CheckoutSessionData } from '../types';
-import { showErrorMessage } from '../utils/ui';
+import { showFrontEndMessage } from '../utils/ui';
 
 /**
  * 创建Stripe Checkout Session
@@ -11,12 +11,7 @@ import { showErrorMessage } from '../utils/ui';
  * @param tabId 标签页ID
  * @returns Checkout Session文档引用
  */
-export async function createCheckoutSession(
-  uid: string,
-  priceId: string,
-  userEmail: string,
-  tabId: number
-) {
+export async function createCheckoutSession(uid: string, priceId: string, userEmail: string, tabId: number) {
   try {
     const checkoutSessionRef = collection(db, 'customers', uid, 'checkout_sessions');
     const sessionData: CheckoutSessionData = {
@@ -28,10 +23,7 @@ export async function createCheckoutSession(
     };
     return await addDoc(checkoutSessionRef, sessionData);
   } catch (error: any) {
-    await showErrorMessage(
-      tabId,
-      `Failed to create payment session: ${error.message || 'Unknown error'}`
-    );
+    await showFrontEndMessage(tabId, `Failed to create payment session: ${error.message || 'Unknown error'}`);
     throw error;
   }
 }
@@ -48,4 +40,4 @@ export function openStripeCheckout(url: string) {
     width: 800,
     height: 600,
   });
-} 
+}
