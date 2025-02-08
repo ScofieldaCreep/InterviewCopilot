@@ -45,38 +45,42 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 
     showFrontEndMessage(tabId, 'Getting Solution...');
 
-    // 2. 防止用户在15秒内重复请求
-    const { lastQueryTime, lastContent, lastContentQueryTime } = await chrome.storage.sync.get([
-      'lastQueryTime',
-      'lastContent',
-      'lastContentQueryTime',
-    ]);
-    const now = Date.now();
+    // // 2. 防止用户在15秒内重复请求
+    // const { lastQueryTime, lastContent, lastContentQueryTime } = await chrome.storage.sync.get([
+    //   'lastQueryTime',
+    //   'lastContent',
+    //   'lastContentQueryTime',
+    // ]);
+    // const now = Date.now();
 
-    if (lastQueryTime && now - lastQueryTime < 15000) {
-      await showFrontEndMessage(tabId, 'Please wait 15 seconds between requests.');
-      return;
-    }
+    // if (lastQueryTime && now - lastQueryTime < 15000) {
+    //   await showFrontEndMessage(tabId, 'Please wait 15 seconds between requests.');
+    //   return;
+    // }
 
     // 4. 获取当前 AI 配置
     const { model, language, context, programmingLanguage } = await getApiConfig();
+    console.log('model', model);
+
+    // showFrontEndMessage(tabId, `model: ${model}`);
+    // await new Promise(resolve => setTimeout(resolve, 100000000));
 
     // 5. 注入 content script，获取页面内容
     await injectContentScript(tabId);
     const pageContent = await fetchPageContent(tabId);
 
-    // 6. 防止在2分钟内重复分析同一份内容
-    if (lastContent === pageContent && lastContentQueryTime && now - lastContentQueryTime < 120000) {
-      await showFrontEndMessage(tabId, 'Please wait before submitting the same content again.');
-      return;
-    }
+    // // 6. 防止在2分钟内重复分析同一份内容
+    // if (lastContent === pageContent && lastContentQueryTime && now - lastContentQueryTime < 120000) {
+    //   await showFrontEndMessage(tabId, 'Please wait before submitting the same content again.');
+    //   return;
+    // }
 
-    // 7. 记录新的请求时间 & 内容
-    await chrome.storage.sync.set({
-      lastQueryTime: now,
-      lastContent: pageContent,
-      lastContentQueryTime: now,
-    });
+    // // 7. 记录新的请求时间 & 内容
+    // await chrome.storage.sync.set({
+    //   lastQueryTime: now,
+    //   lastContent: pageContent,
+    //   lastContentQueryTime: now,
+    // });
 
     // 8. 准备向 OpenAI 发送的 Prompt
     const DEFAULT_PROMPT_TEMPLATE = `

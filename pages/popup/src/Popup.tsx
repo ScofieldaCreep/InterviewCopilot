@@ -210,15 +210,15 @@ const ModelSelector: React.FC<{
       description: 'GPT-4o',
     },
     {
-      value: 'gpt-4o',
+      value: 'o1-mini',
       label: 'Balanced',
-      description: 'o1-mini',
+      description: 'o1 series',
       pro: true,
     },
     {
-      value: 'o1-mini',
+      value: 'o1-preview',
       label: 'Accurate',
-      description: 'o1',
+      description: 'o3 series',
       pro: true,
     },
   ];
@@ -382,8 +382,8 @@ const UserDashboard: React.FC<{
 
       <style>
         {`
-          select option[value="gpt-4o"],
-          select option[value="o1-mini"] {
+          select option[value="o1-mini"],
+          select option[value="o1"] {
             color: ${!user.hasValidSubscription && !inTrial ? '#666' : 'inherit'};
           }
         `}
@@ -459,11 +459,24 @@ const UserDashboard: React.FC<{
 //   - 在 handleGetSolutionAction 前先刷新
 //   - 或者在 Popup 加载时刷新(已在后面useEffect里做)
 
-async function handleGetSolutionAction(model: string, language: string, context: string) {
-  // ---- 如果想在点击GetSolution时再刷新一次，可取消注释： ----
-  // await new Promise<void>((res) => {
-  //   chrome.runtime.sendMessage({ action: 'refreshUser' }, () => res())
-  // })
+async function handleGetSolutionAction(
+  model: string,
+  language: string,
+  context: string,
+  programmingLanguage: string, // 新增参数
+) {
+  // 确保存储所有配置
+  await new Promise<void>(resolve => {
+    chrome.storage.sync.set(
+      {
+        model: model || 'gpt-4o-mini', // 增加默认值
+        language: language || 'en',
+        context: context || '',
+        programmingLanguage: programmingLanguage || 'python',
+      },
+      resolve,
+    );
+  });
 
   await new Promise<void>(resolve => {
     chrome.storage.sync.set({ model, language, context }, resolve);
@@ -518,23 +531,24 @@ function handleSubscribeAction() {
 
 /** ================== 主组件 ================== **/
 const Popup: React.FC = () => {
-  const [model, setModel] = useState('gpt-3.5-turbo');
+  const [model, setModel] = useState('gpt-4o-mini');
   const [language, setLanguage] = useState('en');
   const [context, setContext] = useState('');
   const [user, setUser] = useState<User | null>(null);
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [programmingLanguage, setProgrammingLanguage] = useState('python');
 
-  // 初始化数据
+  // 初始化数据 - 增加默认值处理
   useEffect(() => {
     chrome.storage.sync.get(['model', 'language', 'context', 'user', 'programmingLanguage'], data => {
-      if (data.model) setModel(data.model);
-      if (data.language) setLanguage(data.language);
-      if (data.context) setContext(data.context);
-      if (data.programmingLanguage) setProgrammingLanguage(data.programmingLanguage);
+      setModel(data.model || 'gpt-4o-mini'); // 确保默认值
+      setLanguage(data.language || 'en');
+      setContext(data.context || '');
+      setProgrammingLanguage(data.programmingLanguage || 'python');
+
       if (data.user) {
         setUser({
-          uid: data.user.uid || '', // ← 新增: 确保拿到uid
+          uid: data.user.uid || '',
           name: data.user.name,
           email: data.user.email,
           photo: data.user.photoURL,
@@ -598,7 +612,7 @@ const Popup: React.FC = () => {
     }
   }, [user]);
 
-  const handleGetSolution = () => handleGetSolutionAction(model, language, context);
+  const handleGetSolution = () => handleGetSolutionAction(model, language, context, programmingLanguage);
   const handleLogin = () => handleLoginAction();
   const handleLogout = () => handleLogoutAction(setUser);
   const handleSubscribe = () => handleSubscribeAction();
