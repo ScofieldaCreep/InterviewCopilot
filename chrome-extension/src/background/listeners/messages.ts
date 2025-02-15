@@ -1,25 +1,15 @@
 import { querySolution } from '../core/solution';
 import { getUser } from '../utils/config';
-import { showFrontEndMessage } from '../utils/ui';
-import {
-  hasActiveSubscription,
-  getStripePriceId,
-  listenToCheckoutSession,
-  checkPaymentStatus,
-} from '../services/firebase';
+import { hasActiveSubscription, getStripePriceId, listenToCheckoutSession } from '../services/firebase';
 import { createCheckoutSession, openStripeCheckout } from '../services/stripe';
+import { User } from '../types';
 
 /**
  * 刷新用户数据
  */
-export async function refreshUserData(): Promise<void> {
-  const user = await getUser();
-  if (!user || !user.uid) {
-    return;
-  }
-
+export async function refreshUserData(user: User, tabId: number): Promise<void> {
   // 检查 Firestore 是否有有效订阅
-  const hasValidSubscription = await checkPaymentStatus(user.uid);
+  const hasValidSubscription = await hasActiveSubscription(user.uid, tabId);
   const updatedUser = {
     ...user,
     hasValidSubscription,
@@ -80,10 +70,10 @@ export function initializeListeners(): void {
 
           // 3.3 获取 Stripe 价格 ID
           const PRICE_ID = await getStripePriceId();
-
+          console.log('PRICE_ID', PRICE_ID);
           // 3.4 创建 checkout session
           const docRef = await createCheckoutSession(user.uid, PRICE_ID, user.email, request.tabId);
-
+          console.log('docRef', docRef);
           // 3.5 监听 checkout session, 获取 Stripe 支付链接
           const unsubscribe = listenToCheckoutSession(docRef, data => {
             if (data?.error) {

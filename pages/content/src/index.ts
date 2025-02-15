@@ -14,7 +14,7 @@ chrome.runtime.onMessage.addListener(
     sender: chrome.runtime.MessageSender,
     sendResponse: (response: ContentResponse) => void,
   ) => {
-    // console.log('Received message:', request)
+    console.log('Received message:', request);
 
     if (request.action === 'getPageContent') {
       try {
@@ -28,10 +28,10 @@ chrome.runtime.onMessage.addListener(
             .join('\n'),
         };
 
-        // console.log('Sending response:', content)
+        console.log('Sending response:', content);
         sendResponse(content);
       } catch (error) {
-        // console.error('Content script error:', error)
+        console.error('Content script error:', error);
         sendResponse({
           success: false,
           error: 'Unknown error in content script when getPageContent',

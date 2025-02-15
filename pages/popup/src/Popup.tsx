@@ -103,9 +103,18 @@ const UserInfo: React.FC<{ user: User; onLogout: () => void }> = ({ user, onLogo
       </div>
       <p className="user-email">{user.email}</p>
     </div>
-    <Button variant="secondary" onClick={onLogout} className="logout-button">
-      Logout
-    </Button>
+    {user.hasValidSubscription ? (
+      <Button
+        variant="secondary"
+        onClick={() => window.open('https://billing.stripe.com/p/login/3cs8AD2ipdpe8TedQQ', '_blank')}
+        className="manage-button">
+        Manage
+      </Button>
+    ) : (
+      <Button variant="secondary" onClick={onLogout} className="logout-button">
+        Logout
+      </Button>
+    )}
   </div>
 );
 
@@ -134,7 +143,13 @@ const NavigationHint: React.FC = () => (
         </div>
         <div className="shortcut-description">
           <span className="shortcut-label">Stealth Shortcut</span>
-          <span className="shortcut-detail">Silently peek solutions, in one hidden click</span>
+          <span className="shortcut-detail">
+            Silently peek solutions, in one hidden click.
+            <br />
+            <span className="shortcut-platform">Mac: Option + Q</span>
+            <br />
+            <span className="shortcut-platform">Windows: Alt + Q</span>
+          </span>
         </div>
       </div>
     </div>
@@ -216,7 +231,7 @@ const ModelSelector: React.FC<{
       pro: true,
     },
     {
-      value: 'o1-preview',
+      value: 'o3-mini',
       label: 'Accurate',
       description: 'o3 series',
       pro: true,
@@ -373,7 +388,7 @@ const UserDashboard: React.FC<{
           <textarea
             id="context"
             rows={2}
-            placeholder="Add specific requirements or preferences..."
+            placeholder="Add custom requirements or preferences..."
             value={context}
             onChange={e => setContext(e.target.value)}
           />
@@ -488,16 +503,16 @@ async function handleGetSolutionAction(
         .sendMessage({ action: 'getAnswer', tabId: tab.id })
         .then(response => {
           if (response?.error) {
-            // console.error('获取答案错误:', response.error)
+            console.error('获取答案错误:', response.error);
           } else {
-            // console.log('答案获取成功')
+            console.log('答案获取成功');
           }
         })
         .catch(error => {
-          // console.error('消息发送失败:', error)
+          console.error('消息发送失败:', error);
         });
     } else {
-      // console.error('无效的标签页')
+      console.error('无效的标签页');
     }
   });
 }
@@ -505,9 +520,9 @@ async function handleGetSolutionAction(
 function handleLoginAction() {
   chrome.runtime.sendMessage({ action: 'login' }, response => {
     if (response && response.success) {
-      // console.log('登录窗口已打开，请在弹出的窗口中完成登录。')
+      console.log('登录窗口已打开，请在弹出的窗口中完成登录。');
     } else {
-      // console.error('登录失败', response?.error)
+      console.error('登录失败', response?.error);
     }
   });
 }
@@ -515,17 +530,22 @@ function handleLoginAction() {
 function handleLogoutAction(setUser: React.Dispatch<React.SetStateAction<User | null>>) {
   chrome.storage.sync.remove('user', () => {
     if (chrome.runtime.lastError) {
-      // console.error('登出失败:', chrome.runtime.lastError)
+      console.error('登出失败:', chrome.runtime.lastError);
     } else {
       setUser(null);
-      // console.log('用户已成功注销')
+      console.log('用户已成功注销');
     }
   });
 }
 
 function handleSubscribeAction() {
   chrome.runtime.sendMessage({ action: 'subscribe' }, response => {
-    // console.log('订阅响应:', response)
+    console.log('订阅响应:', response);
+    if (response?.error) {
+      console.error('订阅错误:', response.error);
+    } else {
+      console.log('订阅成功');
+    }
   });
 }
 
@@ -588,9 +608,9 @@ const Popup: React.FC = () => {
   useEffect(() => {
     chrome.storage.sync.set({ model, language, context, programmingLanguage }, () => {
       if (chrome.runtime.lastError) {
-        // console.error('Failed to save config:', chrome.runtime.lastError)
+        console.error('Failed to save config:', chrome.runtime.lastError);
       } else {
-        // console.log('Config saved:', { model, language, context })
+        console.log('Config saved:', { model, language, context });
       }
     });
   }, [model, language, context, programmingLanguage]);
