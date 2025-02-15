@@ -1111,8 +1111,39 @@ select option:disabled {
   box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
 }
 
+.platform-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 4px;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.platform-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: var(--primary-color-filter);
+  transition: all 0.2s ease;
+}
+
+.shortcut-platform:hover .platform-icon {
+  background: rgba(99, 102, 241, 0.15);
+  transform: scale(1.05);
+}
+
+.shortcut-platform:hover .platform-icon img {
+  filter: var(--primary-hover-color-filter);
+}
+
 .shortcut-platform {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   font-size: 0.9em;
   color: var(--text-color);
   padding: 4px 8px;

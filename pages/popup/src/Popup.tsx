@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './Popup.css';
+import macIcon from '../public/mac.svg';
+import winIcon from '../public/win.svg';
 
 interface User {
   uid: string; // ← 新增 uid
@@ -146,9 +148,19 @@ const NavigationHint: React.FC = () => (
           <span className="shortcut-detail">
             Silently peek solutions, in one hidden click.
             <br />
-            <span className="shortcut-platform">Mac: Option + Q</span>
+            <span className="shortcut-platform">
+              <span className="platform-icon">
+                <img src={macIcon} alt="Mac" width="14" height="14" />
+              </span>
+              Option + Q
+            </span>
             <br />
-            <span className="shortcut-platform">Windows: Alt + Q</span>
+            <span className="shortcut-platform">
+              <span className="platform-icon">
+                <img src={winIcon} alt="Windows" width="14" height="14" />
+              </span>
+              Alt + Q
+            </span>
           </span>
         </div>
       </div>
