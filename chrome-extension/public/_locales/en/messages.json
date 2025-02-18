@@ -1,10 +1,10 @@
 {
-	"appName": {
-		"message": "AlgoAce",
-		"description": "The name of the extension"
-	},
-	"appDescription": {
-		"message": "An AI-driven interview copilot, empowering you with game-changing solutions to even the toughest LeetCode problems, ensuring unmatched confidence and success.",
-		"description": "The description of the extension"
-	}
+  "appName": {
+    "message": "AlgoAce",
+    "description": "An Interview Copilot"
+  },
+  "appDescription": {
+    "message": "AI interview copilot, capable of solving toughest LeetCode problems, a solid backup.",
+    "description": "An Interview Copilot"
+  }
 }

@@ -362,6 +362,11 @@ const UserDashboard: React.FC<{
                     '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> JavaScript',
                 },
                 {
+                  value: 'sql',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> SQL',
+                },
+                {
                   value: 'go',
                   label:
                     '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/go/go-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Go',
