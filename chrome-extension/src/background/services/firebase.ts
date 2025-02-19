@@ -42,17 +42,13 @@ export async function callOpenAIThroughBackend(prompt: string, model: string, ta
 export async function hasActiveSubscription(uid: string, tabId: number): Promise<boolean> {
   try {
     const subscriptionsRef = collection(db, 'customers', uid, 'subscriptions');
-    const activeQuery = query(
-      subscriptionsRef,
-      where('status', '==', 'active'),
-      orderBy('current_period_end', 'desc'),
-      limit(1),
-    );
+    const activeQuery = query(subscriptionsRef, orderBy('current_period_end', 'desc'), limit(1));
     const activeSubsSnapshot = await getDocs(activeQuery);
     if (activeSubsSnapshot.empty) return false;
 
     const latestSub = activeSubsSnapshot.docs[0].data();
     const currentPeriodEndMs = latestSub.current_period_end.toMillis();
+    console.log('currentPeriodEndMs', currentPeriodEndMs);
     return currentPeriodEndMs > Date.now();
   } catch (error: any) {
     await showFrontEndMessage(tabId, `Subscription check failed: ${error.message || 'Unknown error'}`);
@@ -60,21 +56,22 @@ export async function hasActiveSubscription(uid: string, tabId: number): Promise
   }
 }
 
-/**
- * 检查用户支付状态
- * @param userId 用户ID
- * @returns 是否有有效订阅
- */
-export async function checkPaymentStatus(userId: string): Promise<boolean> {
-  const paymentsRef = collection(db, 'customers', userId, 'subscriptions');
-  const q = query(paymentsRef, where('status', '==', 'active'), orderBy('current_period_end', 'desc'), limit(1));
-  const snapshot = await getDocs(q);
-  if (snapshot.empty) return false;
+// /**
+//  * 检查用户支付状态
+//  * @param userId 用户ID
+//  * @returns 是否有有效订阅
+//  */
+// export async function checkPaymentStatus(userId: string): Promise<boolean> {
+//   // const paymentsRef = collection(db, 'customers', userId, 'subscriptions');
+//   // const q = query(paymentsRef, where('status', '==', 'active'), orderBy('current_period_end', 'desc'), limit(1));
+//   // const snapshot = await getDocs(q);
+//   // if (snapshot.empty) return false;
 
-  const data = snapshot.docs[0].data();
-  const currentPeriodEndMs = data.current_period_end.toMillis();
-  return currentPeriodEndMs > Date.now();
-}
+//   // const data = snapshot.docs[0].data();
+//   // const currentPeriodEndMs = data.current_period_end.toMillis();
+//   // return currentPeriodEndMs > Date.now();
+//   return hasActiveSubscription(userId, 0);
+// }
 
 /**
  * 获取Stripe价格ID
@@ -87,6 +84,7 @@ export async function getStripePriceId(): Promise<string> {
     throw new Error('Stripe configuration not found');
   }
   return configSnap.data().priceId_production;
+  // return configSnap.data().priceId_test;
 }
 
 /**

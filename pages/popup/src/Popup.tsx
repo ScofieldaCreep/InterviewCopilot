@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './Popup.css';
+import macIcon from '../public/mac.svg';
+import winIcon from '../public/win.svg';
 
 interface User {
   uid: string; // ← 新增 uid
@@ -103,9 +105,18 @@ const UserInfo: React.FC<{ user: User; onLogout: () => void }> = ({ user, onLogo
       </div>
       <p className="user-email">{user.email}</p>
     </div>
-    <Button variant="secondary" onClick={onLogout} className="logout-button">
-      Logout
-    </Button>
+    {user.hasValidSubscription ? (
+      <Button
+        variant="secondary"
+        onClick={() => window.open('https://billing.stripe.com/p/login/3cs8AD2ipdpe8TedQQ', '_blank')}
+        className="manage-button">
+        Manage
+      </Button>
+    ) : (
+      <Button variant="secondary" onClick={onLogout} className="logout-button">
+        Logout
+      </Button>
+    )}
   </div>
 );
 
@@ -122,7 +133,10 @@ const UserInfo: React.FC<{ user: User; onLogout: () => void }> = ({ user, onLogo
 //   </div>
 // );
 
-const NavigationHint: React.FC = () => (
+const NavigationHint: React.FC<{
+  notificationsEnabled: boolean;
+  onNotificationToggle: () => Promise<void>;
+}> = ({ notificationsEnabled, onNotificationToggle }) => (
   <div className="navigation-hint">
     <div className="nav-title">⚡️ Pro Tips</div>
     <div className="shortcut-container">
@@ -134,7 +148,23 @@ const NavigationHint: React.FC = () => (
         </div>
         <div className="shortcut-description">
           <span className="shortcut-label">Stealth Shortcut</span>
-          <span className="shortcut-detail">Silently peek solutions, in one hidden click</span>
+          <span className="shortcut-detail">
+            Silently peek solutions, in one hidden click.
+            <br />
+            <span className="shortcut-platform">
+              <span className="platform-icon">
+                <img src={macIcon} alt="Mac" width="14" height="14" />
+              </span>
+              Option + Q
+            </span>
+            <br />
+            <span className="shortcut-platform">
+              <span className="platform-icon">
+                <img src={winIcon} alt="Windows" width="14" height="14" />
+              </span>
+              Alt + Q
+            </span>
+          </span>
         </div>
       </div>
     </div>
@@ -146,6 +176,24 @@ const NavigationHint: React.FC = () => (
           Solutions will pop up as an unactive window next to current Chrome page without disturbing your active tab.
         </span>
       </div>
+
+      <div className="notification-settings">
+        <div className="settings-header">
+          <span className="settings-icon">🔔</span>
+          <span className="settings-title">Action Notifications</span>
+        </div>
+        <div className="settings-content">
+          <label className="toggle-switch">
+            <input type="checkbox" checked={notificationsEnabled} onChange={onNotificationToggle} />
+            <span className="toggle-slider"></span>
+          </label>
+          <div className="settings-descriptions">
+            <span className="settings-description">Enable AlgoAce notifications</span>
+            <span className="settings-description muted">Mute this in interviews with screen recording</span>
+          </div>
+        </div>
+      </div>
+
       <div className="contact-info">
         <span className="contact-icon">💌</span>
         <span className="contact-text">Welcome Suggestions: chizhang2048@gmail.com</span>
@@ -210,15 +258,15 @@ const ModelSelector: React.FC<{
       description: 'GPT-4o',
     },
     {
-      value: 'gpt-4o',
+      value: 'o1-mini',
       label: 'Balanced',
-      description: 'o1-mini',
+      description: 'o1 series',
       pro: true,
     },
     {
-      value: 'o1-mini',
+      value: 'o3-mini',
       label: 'Accurate',
-      description: 'o1',
+      description: 'o3 series',
       pro: true,
     },
   ];
@@ -257,6 +305,8 @@ const UserDashboard: React.FC<{
   remainingTime: number;
   onGetSolution: () => void;
   onSubscribe: () => void;
+  notificationsEnabled: boolean;
+  onNotificationToggle: () => Promise<void>;
 }> = ({
   user,
   onLogout,
@@ -271,6 +321,8 @@ const UserDashboard: React.FC<{
   remainingTime,
   onGetSolution,
   onSubscribe,
+  notificationsEnabled,
+  onNotificationToggle,
 }) => {
   const inTrial = !user.hasValidSubscription && remainingTime > 0;
   const trialTimeLeft = inTrial
@@ -335,6 +387,11 @@ const UserDashboard: React.FC<{
                     '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> JavaScript',
                 },
                 {
+                  value: 'sql',
+                  label:
+                    '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> SQL',
+                },
+                {
                   value: 'go',
                   label:
                     '<img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/go/go-original.svg" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" /> Go',
@@ -373,7 +430,7 @@ const UserDashboard: React.FC<{
           <textarea
             id="context"
             rows={2}
-            placeholder="Add specific requirements or preferences..."
+            placeholder="Add custom requirements or preferences..."
             value={context}
             onChange={e => setContext(e.target.value)}
           />
@@ -382,8 +439,8 @@ const UserDashboard: React.FC<{
 
       <style>
         {`
-          select option[value="gpt-4o"],
-          select option[value="o1-mini"] {
+          select option[value="o1-mini"],
+          select option[value="o1"] {
             color: ${!user.hasValidSubscription && !inTrial ? '#666' : 'inherit'};
           }
         `}
@@ -448,7 +505,7 @@ const UserDashboard: React.FC<{
           </div>
         </div>
       )}
-      <NavigationHint />
+      <NavigationHint notificationsEnabled={notificationsEnabled} onNotificationToggle={onNotificationToggle} />
     </>
   );
 };
@@ -459,11 +516,24 @@ const UserDashboard: React.FC<{
 //   - 在 handleGetSolutionAction 前先刷新
 //   - 或者在 Popup 加载时刷新(已在后面useEffect里做)
 
-async function handleGetSolutionAction(model: string, language: string, context: string) {
-  // ---- 如果想在点击GetSolution时再刷新一次，可取消注释： ----
-  // await new Promise<void>((res) => {
-  //   chrome.runtime.sendMessage({ action: 'refreshUser' }, () => res())
-  // })
+async function handleGetSolutionAction(
+  model: string,
+  language: string,
+  context: string,
+  programmingLanguage: string, // 新增参数
+) {
+  // 确保存储所有配置
+  await new Promise<void>(resolve => {
+    chrome.storage.sync.set(
+      {
+        model: model || 'gpt-4o-mini', // 增加默认值
+        language: language || 'en',
+        context: context || '',
+        programmingLanguage: programmingLanguage || 'python',
+      },
+      resolve,
+    );
+  });
 
   await new Promise<void>(resolve => {
     chrome.storage.sync.set({ model, language, context }, resolve);
@@ -475,16 +545,16 @@ async function handleGetSolutionAction(model: string, language: string, context:
         .sendMessage({ action: 'getAnswer', tabId: tab.id })
         .then(response => {
           if (response?.error) {
-            // console.error('获取答案错误:', response.error)
+            console.error('获取答案错误:', response.error);
           } else {
-            // console.log('答案获取成功')
+            console.log('答案获取成功');
           }
         })
         .catch(error => {
-          // console.error('消息发送失败:', error)
+          console.error('消息发送失败:', error);
         });
     } else {
-      // console.error('无效的标签页')
+      console.error('无效的标签页');
     }
   });
 }
@@ -492,9 +562,9 @@ async function handleGetSolutionAction(model: string, language: string, context:
 function handleLoginAction() {
   chrome.runtime.sendMessage({ action: 'login' }, response => {
     if (response && response.success) {
-      // console.log('登录窗口已打开，请在弹出的窗口中完成登录。')
+      console.log('登录窗口已打开，请在弹出的窗口中完成登录。');
     } else {
-      // console.error('登录失败', response?.error)
+      console.error('登录失败', response?.error);
     }
   });
 }
@@ -502,47 +572,58 @@ function handleLoginAction() {
 function handleLogoutAction(setUser: React.Dispatch<React.SetStateAction<User | null>>) {
   chrome.storage.sync.remove('user', () => {
     if (chrome.runtime.lastError) {
-      // console.error('登出失败:', chrome.runtime.lastError)
+      console.error('登出失败:', chrome.runtime.lastError);
     } else {
       setUser(null);
-      // console.log('用户已成功注销')
+      console.log('用户已成功注销');
     }
   });
 }
 
 function handleSubscribeAction() {
   chrome.runtime.sendMessage({ action: 'subscribe' }, response => {
-    // console.log('订阅响应:', response)
+    console.log('订阅响应:', response);
+    if (response?.error) {
+      console.error('订阅错误:', response.error);
+    } else {
+      console.log('订阅成功');
+    }
   });
 }
 
 /** ================== 主组件 ================== **/
 const Popup: React.FC = () => {
-  const [model, setModel] = useState('gpt-3.5-turbo');
+  const [model, setModel] = useState('gpt-4o-mini');
   const [language, setLanguage] = useState('en');
   const [context, setContext] = useState('');
   const [user, setUser] = useState<User | null>(null);
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [programmingLanguage, setProgrammingLanguage] = useState('python');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-  // 初始化数据
+  // 初始化数据 - 增加默认值处理
   useEffect(() => {
-    chrome.storage.sync.get(['model', 'language', 'context', 'user', 'programmingLanguage'], data => {
-      if (data.model) setModel(data.model);
-      if (data.language) setLanguage(data.language);
-      if (data.context) setContext(data.context);
-      if (data.programmingLanguage) setProgrammingLanguage(data.programmingLanguage);
-      if (data.user) {
-        setUser({
-          uid: data.user.uid || '', // ← 新增: 确保拿到uid
-          name: data.user.name,
-          email: data.user.email,
-          photo: data.user.photoURL,
-          hasValidSubscription: data.user.hasValidSubscription || data.user.email === 'scofieldacreep@gmail.com',
-          creationTime: data.user.creationTime,
-        });
-      }
-    });
+    chrome.storage.sync.get(
+      ['model', 'language', 'context', 'user', 'programmingLanguage', 'notificationsEnabled'],
+      data => {
+        setModel(data.model || 'gpt-4o-mini');
+        setLanguage(data.language || 'en');
+        setContext(data.context || '');
+        setProgrammingLanguage(data.programmingLanguage || 'python');
+        setNotificationsEnabled(data.notificationsEnabled || false);
+
+        if (data.user) {
+          setUser({
+            uid: data.user.uid || '',
+            name: data.user.name,
+            email: data.user.email,
+            photo: data.user.photoURL,
+            hasValidSubscription: data.user.hasValidSubscription || data.user.email === 'scofieldacreep@gmail.com',
+            creationTime: data.user.creationTime,
+          });
+        }
+      },
+    );
   }, []);
 
   // ② Popup 每次打开时，主动让后台刷新一次用户数据(按需拉取)
@@ -574,9 +655,9 @@ const Popup: React.FC = () => {
   useEffect(() => {
     chrome.storage.sync.set({ model, language, context, programmingLanguage }, () => {
       if (chrome.runtime.lastError) {
-        // console.error('Failed to save config:', chrome.runtime.lastError)
+        console.error('Failed to save config:', chrome.runtime.lastError);
       } else {
-        // console.log('Config saved:', { model, language, context })
+        console.log('Config saved:', { model, language, context });
       }
     });
   }, [model, language, context, programmingLanguage]);
@@ -598,10 +679,37 @@ const Popup: React.FC = () => {
     }
   }, [user]);
 
-  const handleGetSolution = () => handleGetSolutionAction(model, language, context);
+  const handleGetSolution = () => handleGetSolutionAction(model, language, context, programmingLanguage);
   const handleLogin = () => handleLoginAction();
   const handleLogout = () => handleLogoutAction(setUser);
   const handleSubscribe = () => handleSubscribeAction();
+
+  const handleNotificationToggle = async () => {
+    const newState = !notificationsEnabled;
+
+    if (newState) {
+      // 请求通知权限
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        await chrome.storage.sync.set({ notificationsEnabled: true });
+        // 发送测试通知
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: '/icon128.png',
+          title: 'Interview Copilot 通知已启用',
+          message: '您将收到重要的面试提示和解答通知。',
+        });
+      } else {
+        // 如果用户拒绝了权限
+        setNotificationsEnabled(false);
+        await chrome.storage.sync.set({ notificationsEnabled: false });
+      }
+    } else {
+      setNotificationsEnabled(false);
+      await chrome.storage.sync.set({ notificationsEnabled: false });
+    }
+  };
 
   let content;
   if (!user) {
@@ -622,6 +730,8 @@ const Popup: React.FC = () => {
         remainingTime={remainingTime}
         onGetSolution={handleGetSolution}
         onSubscribe={handleSubscribe}
+        notificationsEnabled={notificationsEnabled}
+        onNotificationToggle={handleNotificationToggle}
       />
     );
   }

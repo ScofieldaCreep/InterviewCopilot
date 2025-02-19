@@ -1,7 +1,7 @@
 {
   "name": "algo-ace",
-  "version": "1.0",
-  "description": "An interview copilot named algo-ace",
+  "version": "1.2.1",
+  "description": "An interview copilot, algo-ace, ace your coding interview and secure your offer",
   "type": "module",
   "scripts": {
     "clean:bundle": "rimraf dist && rimraf dist-zip && turbo clean:bundle",

@@ -18,7 +18,7 @@ const manifest = deepmerge(
     // key: 'TUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF0ekU3Zm1SMTROZDdWQXdhM0lFOFR5MGlXemFSNitIdWNJekNhN0p2UTVXS2dFY0c0NDMvRDNjK05HeEJTM0RibytVdkdFZlM0d05uUmNkQVNlalNtbm1oelEzbnJlalNKcXpXekVGNnh0bU5saUpQTzhYZE1RYng5TW1rbjduN29wUWlHczBmaWZvR0hiR1hEOUFlbFFNcU90UHRxQzEzcW93SWN0bGU3ZkdWb21yUmtLQXdoS1JMSTVua1lORStUcStscnB5bXpsMmR4UnFTWWdnTEZqK3hYdUdrWjlPd01JSWRhOU0wcE1vL3hqZ1I2WEJhNit2TlQ2U3pQRXNSUER6ZXp3YjZ0SUZPdjlXRUxVZ2YyUmM4aUlvYm1WSFhzamtPUTVERUFvVFdUdGphTFREajBDMjdYOTJ5YWJSWGxDSFJYclF5K3YwVUJGbU9rRmV0K0h1Y0l6Q2E3SnZRNVdLZ0VjRzQ0My9EM2MrTkd4QlMzRGJvK1V2R0VmUzR3Tm5SY2RBU2VqU21ubWh6UTNucmVqU0pxeld6RUY2eHRtTmxpSlBPOFhkTVFieDlNbWtuN243b3BRaUdzMGZpZm9HSGJHWEQ5QWVsUU1xT3RQdHFDMTNxb3dJY3RsZTdmR1ZvbXJSa0tBd2hLUkxJNW5rWU5FK1RxK2xycHltemwyZHhScVNZZ2dMRmoreFh1R2taOU93TUlJZGE5TTBwTW8veGpnUjZYQmE2K3ZOVDZTelBFc1JQRHplendiNnRJRk92OVdFTFVnZjJSYzhpSW9ibVZIWHNqa09RNURFQW9UV1R0amFMVERqMEMyN1g5MnlhYlJYbENIUlhyUXkrdjBVQkZtT2tGZXQK',
     key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu0A010tL6tKgqIzFJk7ZPomos9d8sk6h0rjxpMjp6DIsaIhcuaT77izhgu8GVZgQ/0raoNpuSMHIxp/rgwZC2wDbEdyuvPASOT9bf9PfWzCX4xYIoZHKaKBIWNPwHB4ZddbXKT20DaTfOM/CSLnxk6/WcQKtx/YT984/eN/PbkZLhFTbKc7kLjHbNzQU61+IdOOFqXYotw8MeWkQWWFr9Ix/t7L30/ZlzaVkij0wJj+MZwCB1rXxI1CPiyqYBOcNBE/jaUzjLsmMsN6ysbh26KK5CYo2dBJQX0ABVfg4ZcCPgEzr2UmY+892e0nf6E5zRNn7Gu5fBEGD7FohdWiHgwIDAQAB',
     description:
-      'Your AI-driven interview pal. Easy approach to correct solutions for most LeetCode & Hackerrank problems. All In One Click.',
+      'AI-driven interview pal. Easy approach to correct solutions for all coding problems. All In One Click.',
     permissions: [
       'storage', // 用于访问 chrome.storage API，在扩展中存储和读取数据（例如用户信息、设置信息）
       'scripting', // 用于通过 chrome.scripting.executeScript 动态向页面注入脚本
@@ -28,6 +28,7 @@ const manifest = deepmerge(
       'identity', // 用于使用chrome.identity获取OAuth令牌，实现Google账户认证相关功能
       'identity.email', // 在使用identity获取用户信息时，可访问用户的基本个人资料（如email），确保你要使用profile信息才需要这个权限
       'system.display', // 用于获取显示器信息
+      'notifications', // 添加通知权限
     ],
     background: {
       service_worker: 'background.js',

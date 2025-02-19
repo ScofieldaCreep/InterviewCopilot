@@ -37,7 +37,7 @@ export function openStripeCheckout(url: string) {
   return chrome.windows.create({
     url,
     type: 'popup',
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 800,
   });
 }
