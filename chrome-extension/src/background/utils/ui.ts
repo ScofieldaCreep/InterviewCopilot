@@ -6,39 +6,20 @@ import { parseMarkdown, generateResultHTML } from './markdown';
  * @param message 错误信息
  */
 export async function showFrontEndMessage(tabId: number, message: string): Promise<void> {
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    func: (errorMsg: string) => {
-      const style = document.createElement('style');
-      style.textContent = `
-        .algo-ace-error {
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #ff4d4f;
-          color: white;
-          padding: 12px 20px;
-          border-radius: 4px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-          z-index: 10000;
-          animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-      `;
-      document.head.appendChild(style);
+  const { notificationsEnabled } = await chrome.storage.sync.get(['notificationsEnabled']);
 
-      const div = document.createElement('div');
-      div.className = 'algo-ace-error';
-      div.textContent = errorMsg;
-      document.body.appendChild(div);
-
-      setTimeout(() => div.remove(), 6000);
-    },
-    args: ['AlgoAce: ' + message],
-  });
+  if (notificationsEnabled) {
+    // 使用 Chrome 通知系统
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: '/icon128.png',
+      title: 'AlgoAce',
+      message: message,
+      priority: 2,
+      silent: false,
+    });
+  }
+  // 如果用户禁用了通知，则不显示任何通知
 }
 
 /**

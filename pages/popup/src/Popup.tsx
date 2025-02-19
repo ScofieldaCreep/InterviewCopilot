@@ -133,7 +133,10 @@ const UserInfo: React.FC<{ user: User; onLogout: () => void }> = ({ user, onLogo
 //   </div>
 // );
 
-const NavigationHint: React.FC = () => (
+const NavigationHint: React.FC<{
+  notificationsEnabled: boolean;
+  onNotificationToggle: () => Promise<void>;
+}> = ({ notificationsEnabled, onNotificationToggle }) => (
   <div className="navigation-hint">
     <div className="nav-title">⚡️ Pro Tips</div>
     <div className="shortcut-container">
@@ -173,6 +176,24 @@ const NavigationHint: React.FC = () => (
           Solutions will pop up as an unactive window next to current Chrome page without disturbing your active tab.
         </span>
       </div>
+
+      <div className="notification-settings">
+        <div className="settings-header">
+          <span className="settings-icon">🔔</span>
+          <span className="settings-title">Action Notifications</span>
+        </div>
+        <div className="settings-content">
+          <label className="toggle-switch">
+            <input type="checkbox" checked={notificationsEnabled} onChange={onNotificationToggle} />
+            <span className="toggle-slider"></span>
+          </label>
+          <div className="settings-descriptions">
+            <span className="settings-description">Enable AlgoAce notifications</span>
+            <span className="settings-description muted">Mute this in interviews with screen recording</span>
+          </div>
+        </div>
+      </div>
+
       <div className="contact-info">
         <span className="contact-icon">💌</span>
         <span className="contact-text">Welcome Suggestions: chizhang2048@gmail.com</span>
@@ -284,6 +305,8 @@ const UserDashboard: React.FC<{
   remainingTime: number;
   onGetSolution: () => void;
   onSubscribe: () => void;
+  notificationsEnabled: boolean;
+  onNotificationToggle: () => Promise<void>;
 }> = ({
   user,
   onLogout,
@@ -298,6 +321,8 @@ const UserDashboard: React.FC<{
   remainingTime,
   onGetSolution,
   onSubscribe,
+  notificationsEnabled,
+  onNotificationToggle,
 }) => {
   const inTrial = !user.hasValidSubscription && remainingTime > 0;
   const trialTimeLeft = inTrial
@@ -480,7 +505,7 @@ const UserDashboard: React.FC<{
           </div>
         </div>
       )}
-      <NavigationHint />
+      <NavigationHint notificationsEnabled={notificationsEnabled} onNotificationToggle={onNotificationToggle} />
     </>
   );
 };
@@ -574,26 +599,31 @@ const Popup: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [programmingLanguage, setProgrammingLanguage] = useState('python');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   // 初始化数据 - 增加默认值处理
   useEffect(() => {
-    chrome.storage.sync.get(['model', 'language', 'context', 'user', 'programmingLanguage'], data => {
-      setModel(data.model || 'gpt-4o-mini'); // 确保默认值
-      setLanguage(data.language || 'en');
-      setContext(data.context || '');
-      setProgrammingLanguage(data.programmingLanguage || 'python');
+    chrome.storage.sync.get(
+      ['model', 'language', 'context', 'user', 'programmingLanguage', 'notificationsEnabled'],
+      data => {
+        setModel(data.model || 'gpt-4o-mini');
+        setLanguage(data.language || 'en');
+        setContext(data.context || '');
+        setProgrammingLanguage(data.programmingLanguage || 'python');
+        setNotificationsEnabled(data.notificationsEnabled || false);
 
-      if (data.user) {
-        setUser({
-          uid: data.user.uid || '',
-          name: data.user.name,
-          email: data.user.email,
-          photo: data.user.photoURL,
-          hasValidSubscription: data.user.hasValidSubscription || data.user.email === 'scofieldacreep@gmail.com',
-          creationTime: data.user.creationTime,
-        });
-      }
-    });
+        if (data.user) {
+          setUser({
+            uid: data.user.uid || '',
+            name: data.user.name,
+            email: data.user.email,
+            photo: data.user.photoURL,
+            hasValidSubscription: data.user.hasValidSubscription || data.user.email === 'scofieldacreep@gmail.com',
+            creationTime: data.user.creationTime,
+          });
+        }
+      },
+    );
   }, []);
 
   // ② Popup 每次打开时，主动让后台刷新一次用户数据(按需拉取)
@@ -654,6 +684,33 @@ const Popup: React.FC = () => {
   const handleLogout = () => handleLogoutAction(setUser);
   const handleSubscribe = () => handleSubscribeAction();
 
+  const handleNotificationToggle = async () => {
+    const newState = !notificationsEnabled;
+
+    if (newState) {
+      // 请求通知权限
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        await chrome.storage.sync.set({ notificationsEnabled: true });
+        // 发送测试通知
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: '/icon128.png',
+          title: 'Interview Copilot 通知已启用',
+          message: '您将收到重要的面试提示和解答通知。',
+        });
+      } else {
+        // 如果用户拒绝了权限
+        setNotificationsEnabled(false);
+        await chrome.storage.sync.set({ notificationsEnabled: false });
+      }
+    } else {
+      setNotificationsEnabled(false);
+      await chrome.storage.sync.set({ notificationsEnabled: false });
+    }
+  };
+
   let content;
   if (!user) {
     content = <LoginSection onLogin={handleLogin} />;
@@ -673,6 +730,8 @@ const Popup: React.FC = () => {
         remainingTime={remainingTime}
         onGetSolution={handleGetSolution}
         onSubscribe={handleSubscribe}
+        notificationsEnabled={notificationsEnabled}
+        onNotificationToggle={handleNotificationToggle}
       />
     );
   }

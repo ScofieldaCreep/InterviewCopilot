@@ -28,6 +28,7 @@ const manifest = deepmerge(
       'identity', // 用于使用chrome.identity获取OAuth令牌，实现Google账户认证相关功能
       'identity.email', // 在使用identity获取用户信息时，可访问用户的基本个人资料（如email），确保你要使用profile信息才需要这个权限
       'system.display', // 用于获取显示器信息
+      'notifications', // 添加通知权限
     ],
     background: {
       service_worker: 'background.js',

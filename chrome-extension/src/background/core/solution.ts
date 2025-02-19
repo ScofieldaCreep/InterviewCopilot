@@ -14,14 +14,14 @@ async function checkUserPermission(tabId: number): Promise<boolean> {
   const user = await getUser();
   // 3. 判断是否可以使用
   if (!user || !user.uid) {
-    await showFrontEndMessage(tabId, '请先登录');
+    await showFrontEndMessage(tabId, '请先登录后使用');
     return false;
   }
   await refreshUserData(user, tabId);
 
   const validSubscription = await isUserSubscriptionValid(user);
   if (!validSubscription) {
-    await showFrontEndMessage(tabId, '试用期已结束。订阅以继续使用最新AI模型！');
+    await showFrontEndMessage(tabId, '试用期已结束，请订阅以继续使用');
     return false;
   }
 
@@ -41,7 +41,7 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
       return;
     }
 
-    showFrontEndMessage(tabId, 'Getting Solution...');
+    await showFrontEndMessage(tabId, '正在获取解答...');
 
     // 2. 防止用户在15秒内重复请求
     const { lastQueryTime, lastContent, lastContentQueryTime } = await chrome.storage.sync.get([
@@ -52,7 +52,7 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
     const now = Date.now();
 
     if (lastQueryTime && now - lastQueryTime < 10000) {
-      await showFrontEndMessage(tabId, 'Please wait 10 seconds between requests.');
+      await showFrontEndMessage(tabId, '请等待10秒后再次请求');
       return;
     }
 
@@ -69,7 +69,7 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 
     // 6. 防止在2分钟内重复分析同一份内容
     if (lastContent === pageContent && lastContentQueryTime && now - lastContentQueryTime < 10000) {
-      await showFrontEndMessage(tabId, 'Please wait 10s before submitting the same content again.');
+      await showFrontEndMessage(tabId, '请等待10秒后再次提交相同内容');
       return;
     }
 
@@ -108,10 +108,8 @@ export async function querySolution(tabOrId: number | chrome.tabs.Tab) {
 
     // 10. 显示答案
     await showAnswer(answer);
+    await showFrontEndMessage(tabId, '解答已就绪，请查看新窗口');
   } catch (error: any) {
-    await showFrontEndMessage(
-      tabId,
-      `Request processing error: ${error.message || 'Unknown error'}, may need to check your subscription status`,
-    );
+    await showFrontEndMessage(tabId, `处理请求出错: ${error.message || '未知错误'}, 请检查网络连接或订阅状态`);
   }
 }

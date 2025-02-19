@@ -20,8 +20,7 @@ export function initializeCommands(): void {
       try {
         await querySolution(tab);
       } catch (err: any) {
-        console.error(err);
-        await showFrontEndMessage(tab.id!, '检查订阅状态失败，请重试或检查网络连接。');
+        await showFrontEndMessage(tab.id!, err.message);
       }
     }
   });
