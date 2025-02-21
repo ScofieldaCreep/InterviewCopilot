@@ -20,6 +20,7 @@ export async function createCheckoutSession(uid: string, priceId: string, userEm
       cancel_url: 'https://algo-ace-next.vercel.app/',
       mode: 'subscription',
       metadata: { userId: uid, userEmail },
+      allow_promotion_codes: true,
     };
     return await addDoc(checkoutSessionRef, sessionData);
   } catch (error: any) {

@@ -610,7 +610,7 @@ const Popup: React.FC = () => {
         setLanguage(data.language || 'en');
         setContext(data.context || '');
         setProgrammingLanguage(data.programmingLanguage || 'python');
-        setNotificationsEnabled(data.notificationsEnabled || false);
+        setNotificationsEnabled(data.notificationsEnabled || true);
 
         if (data.user) {
           setUser({

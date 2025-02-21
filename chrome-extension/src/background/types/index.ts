@@ -34,6 +34,7 @@ export interface CheckoutSessionData {
     userId: string;
     userEmail: string;
   };
+  allow_promotion_codes: boolean;
 }
 
 // 存储数据接口
@@ -42,4 +43,4 @@ export interface StorageData {
   lastContent?: string;
   lastContentQueryTime?: number;
   user?: User;
-} 
+}
