@@ -64,10 +64,8 @@ Interview Copilot（AlgoAce）是一个开源的 Chrome 插件，帮助用户高
 
 ---
 
-**SEO关键词**: Chrome extension, LeetCode AI, coding interview assistant, 算法面试AI, 刷题助手, AI解题, AlgoAce, 面试Copilot
-
----
-
 欢迎随意使用、随意提意见，上岸请多多推荐，没上岸欢迎来提 issue（认真&搞笑都行）！
 
 Feel free to use, fork, and give feedback. If this project helps you land an offer, please recommend it! If not, open an issue (serious or just for fun, both welcome!).
+
+-- Chrome extension, LeetCode AI, coding interview assistant, 算法面试AI, 刷题助手, AI解题, AlgoAce, 面试Copilot
