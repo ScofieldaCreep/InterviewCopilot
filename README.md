@@ -1,6 +1,6 @@
 # Interview Copilot / AlgoAce Chrome Extension
 
-[English | 中文说明见下方]
+**Available in Chrome Web Store:** [https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla](https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla)
 
 ---
 
@@ -21,8 +21,6 @@ Interview Copilot (AlgoAce) is an open-source Chrome extension that helps users 
 - Firebase (Auth, Firestore, Functions)
 - Chrome Extension APIs
 - pnpm for package management
-
-- **Chrome Web Store:** [https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla](https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla)
 
 ---
 
