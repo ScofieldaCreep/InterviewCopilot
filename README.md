@@ -3,7 +3,7 @@
 **Available in Chrome Web Store:** [https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla](https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla)
 
 ![Repo Views](https://komarev.com/ghpvc/?username=ScofieldaCreep&label=Views&color=blue)
-![Installs on Github]([https://img.shields.io/github/downloads/ScofieldaCreep/InterviewCopilot/total?color=brightgreen](https://img.shields.io/github/downloads/ScofieldaCreep/InterviewCopilot/total?color=brightgreen))
+![Installs on Github]([https://img.shields.io/github/downloads/ScofieldaCreep/InterviewCopilot/total?color=brightgreen])
 
 ---
 
