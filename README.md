@@ -2,6 +2,9 @@
 
 **Available in Chrome Web Store:** [https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla](https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla)
 
+![Repo Visitors](https://komarev.com/ghpvc/?username=ScofieldaCreep&label=访客统计&color=blue)
+![Installs in Github](https://img.shields.io/github/downloads/ScofieldaCreep/InterviewCopilot/total?color=brightgreen)
+
 ---
 
 ## About
