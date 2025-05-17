@@ -1,4 +1,4 @@
-# Interview Copilot / AlgoAce Chrome Extension
+# Interview Copilot (AlgoAce) - An Free & OpenSource Chrome Extension
 
 **Available in Chrome Web Store:** [https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla](https://chromewebstore.google.com/detail/algo-ace/jgmbkilelblcdpcokkclihbedbmccdla)
 
